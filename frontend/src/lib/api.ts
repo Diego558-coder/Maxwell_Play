@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const baseURL = import.meta.env.VITE_API_BASE ?? "https://maxwellplay-production.up.railway.app";
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE as string,
+  baseURL,
   headers: { "Content-Type": "application/json" },
 });
 
