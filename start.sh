@@ -1,5 +1,5 @@
 #!/bin/sh
-set -euxo pipefail
+set -eu
 
 # Railway ejecuta este script mediante Railpack. Preparar y arrancar el backend.
 cd backend
