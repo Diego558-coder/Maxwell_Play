@@ -1,0 +1,28 @@
+.t-container{max-width:1100px;margin:24px auto;padding:0 16px;color:#0f172a}
+.t-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.t-title{font-size:28px;font-weight:800}
+.t-actions{display:flex;gap:10px;align-items:center}
+.t-actions input{padding:10px 12px;border-radius:10px;border:1px solid #e5e7eb;min-width:320px}
+.t-btn{background:#0ea5e9;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.t-btn.small{padding:8px 12px;font-size:.9rem}
+.t-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.06);padding:16px}
+.t-table{display:grid}
+.t-thead,.t-row{display:grid;grid-template-columns:3fr 1fr 1fr 1fr 2fr 1fr;gap:12px;align-items:center}
+.t-thead{font-weight:800;color:#334155;border-bottom:1px solid #e5e7eb;padding:10px 8px}
+.t-row{padding:10px 8px;border-bottom:1px dashed #f1f5f9}
+.t-cell.code{font-family:ui-monospace, SFMono-Regular, Menlo, monospace}
+.t-cell.ok{color:#16a34a;font-weight:700}
+.t-cell.warn{color:#f59e0b;font-weight:700}
+.t-cell.muted{color:#64748b}
+.t-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.t-card.game .t-card-title{font-weight:800;margin-bottom:8px}
+.t-meta{display:grid;gap:4px;color:#334155;margin-bottom:10px}
+.t-badges{display:flex;gap:8px;align-items:center;margin-top:auto}
+.pill{padding:4px 10px;border-radius:999px;font-weight:800;font-size:.85rem}
+.pill.oro{background:#fef3c7;border:1px solid #f59e0b;color:#92400e}
+.pill.plata{background:#f1f5f9;border:1px solid #cbd5e1;color:#334155}
+.pill.bronce{background:#f3e8ff;border:1px solid #d8b4fe;color:#6b21a8}
+.pill.gray{background:#f8fafc;border:1px solid #e2e8f0;color:#64748b}
+@media (max-width:820px){
+  .t-thead,.t-row{grid-template-columns:2fr 1fr .8fr .8fr 1.4fr .8fr}
+}

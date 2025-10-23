@@ -1,0 +1,185 @@
+:root{
+  --bg1:#0f172a; --bg2:#1e293b;
+  --card:rgba(255,255,255,.08); --glass:rgba(255,255,255,.12);
+  --text:#eef2ff; --muted:#cbd5e1;
+  --acc:#38bdf8; --ok:#22c55e; --warn:#f59e0b; --err:#ef4444;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+  --radius:16px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto;
+  color:var(--text);
+  background:
+    radial-gradient(1200px 700px at 20% -10%, #1d4ed8 0%, transparent 60%),
+    radial-gradient(1000px 600px at 120% 120%, #0ea5e9 0%, transparent 60%),
+    linear-gradient(135deg, var(--bg1), var(--bg2));
+  overflow:hidden;
+}
+
+/* ===== App: solo 2 filas (header + main). El footer va fijo. */
+.app{
+  height:100%;
+  display:grid;
+  grid-template-rows:auto 1fr;
+  gap:12px;
+}
+
+/* ===== Header */
+header{
+  display:flex; gap:12px; align-items:center; justify-content:space-between;
+  padding:12px 18px; background:var(--glass); backdrop-filter:blur(12px);
+  box-shadow:var(--shadow);
+}
+header .title{font-weight:800; letter-spacing:.2px}
+.hud{display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+.pill{
+  background:var(--card); padding:8px 12px; border-radius:999px; display:flex; gap:8px; align-items:center;
+  border:1px solid rgba(255,255,255,.12);
+}
+.badge{padding:3px 8px; border-radius:999px; font-size:.78rem; background:rgba(56,189,248,.18); border:1px solid rgba(56,189,248,.4)}
+
+/* ===== Grid principal */
+.main{
+  width:100%;
+  max-width:1600px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:
+    clamp(260px, 22vw, 340px)
+    minmax(720px, 1fr)
+    clamp(260px, 22vw, 340px);
+  gap:14px;
+  padding:0 18px 96px; /* hueco para el footer fijo */
+  height:100%;
+  min-height:0;
+}
+.main > *{min-width:0;} /* importantísimo: evita columnas “palo” */
+
+/* Panel base */
+.panel{
+  background:var(--glass); border:1px solid rgba(255,255,255,.12);
+  border-radius:var(--radius); box-shadow:var(--shadow);
+  padding:14px; min-height:120px; position:relative; z-index:1;
+}
+.panel h3{margin:.2rem 0 .6rem 0; font-size:1rem; color:#e2e8f0}
+.panel .hint{color:var(--muted); font-size:.9rem}
+
+/* ===== Componentes (izquierda) */
+.components{display:grid; gap:10px; height:100%; overflow:auto}
+.comp{
+  user-select:none; padding:12px; border-radius:12px; font-weight:700; cursor:grab; position:relative;
+  box-shadow:var(--shadow); border:1px solid rgba(255,255,255,.12)
+}
+.comp:active{cursor:grabbing; transform:scale(1.03)}
+.comp[aria-grabbed="true"]{outline:2px dashed white}
+.ant{background:linear-gradient(45deg,#ef4444,#b91c1c)}
+.pow{background:linear-gradient(45deg,#f59e0b,#b45309)}
+.pcb{background:linear-gradient(45deg,#22c55e,#15803d)}
+
+/* ===== Centro (stage) */
+.stage{
+  position:relative; overflow:hidden;
+  height:100%; min-height:560px; min-width:0; z-index:0;
+}
+.router{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:230px; height:140px; border-radius:16px; border:2px solid #64748b;
+  background:linear-gradient(145deg,#0b1220,#0e1627); box-shadow:var(--shadow);
+}
+.router .body{
+  position:absolute; inset:20px; border-radius:10px; border:2px dashed rgba(148,163,184,.45);
+  display:grid; place-items:center; color:#94a3b8; font-weight:700; font-size:.9rem; transition:.25s; text-align:center;
+}
+.router .body.ok{border:2px solid #22c55e; background:linear-gradient(145deg,#064e3b,#065f46); color:#e2e8f0}
+.leds{position:absolute; right:10px; top:8px; display:flex; gap:6px}
+.led{width:10px; height:10px; border-radius:50%; background:#334155; box-shadow:0 0 0 0 rgba(0,0,0,0)}
+/* respeta TU lógica JS (classList.add('on','power')) */
+.led.on.power{background:#ef4444; box-shadow:0 0 10px #ef4444}
+.led.on.wifi {background:#38bdf8; box-shadow:0 0 10px #38bdf8}
+.led.on.net  {background:#22c55e; box-shadow:0 0 10px #22c55e}
+.zone{
+  position:absolute; border:2px dashed rgba(255,255,255,.5); color:#e2e8f0b0;
+  display:grid; place-items:center; border-radius:8px; font-size:.8rem; text-align:center;
+}
+.zone.drag{background:rgba(56,189,248,.15); border-color:#38bdf8}
+.zone.filled{border:2px solid #22c55e; color:transparent}
+.z-ant{top:-34px; left:50%; transform:translateX(-50%); width:70px; height:44px}
+.z-pow{bottom:-28px; right:12px; width:58px; height:34px}
+.z-pcb{inset:20px}
+
+/* Canvas ondas */
+canvas#waves{position:absolute; inset:0; pointer-events:none; z-index:0}
+
+/* ===== Dispositivos (derecha) */
+.devices{display:grid; gap:20px; height:100%; overflow:auto}
+.device{
+  position:relative; height:72px; border-radius:14px; display:grid; place-items:center; font-size:2rem;
+  border:1px solid rgba(255,255,255,.12); background:linear-gradient(145deg,#0f172a,#111827);
+  box-shadow:var(--shadow); user-select:none; cursor:grab
+}
+.device:active{cursor:grabbing}
+.device .bars{position:absolute; right:10px; top:8px; display:flex; gap:3px}
+.bar{width:5px; border-radius:2px; background:#475569; transition:.2s}
+.bar:nth-child(1){height:10px} .bar:nth-child(2){height:14px} .bar:nth-child(3){height:18px} .bar:nth-child(4){height:22px}
+.bar.on{background:#22c55e}
+.device.ok{box-shadow:0 0 20px rgba(34,197,94,.7)}
+.ghost{position:absolute; z-index:6}
+
+/* ===== Footer fijo bonito */
+footer{
+  position:fixed; left:50%; transform:translateX(-50%);
+  bottom:12px; z-index:50;
+  display:flex; gap:10px; align-items:center; justify-content:center;
+  padding:12px;
+  background:var(--glass); backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.12); border-radius:14px;
+  box-shadow:var(--shadow)
+}
+.btn{
+  border:none; border-radius:10px; padding:10px 14px; font-weight:800; letter-spacing:.3px; cursor:pointer; color:white;
+  transition:.18s; display:flex; align-items:center; gap:8px
+}
+.btn:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.btn:focus-visible{outline:2px solid #fff; outline-offset:2px}
+.btn[disabled]{opacity:.55; cursor:not-allowed; transform:none; box-shadow:none}
+.b-ok{background:#16a34a} .b-warn{background:#f59e0b} .b-info{background:#0ea5e9} .b-err{background:#ef4444}
+
+/* ===== Modal */
+.modal{position:fixed; inset:0; display:none; place-items:center; padding:18px; z-index:60}
+.modal.show{display:grid}
+.sheet{
+  width:min(760px,95vw); max-height:85vh; overflow:auto; padding:18px; border-radius:16px; background:rgba(2,6,23,.96);
+  border:1px solid rgba(255,255,255,.12); box-shadow:var(--shadow)
+}
+.sheet h2{margin:.2rem 0 .6rem; font-size:1.2rem}
+.sheet p{color:var(--muted); line-height:1.5}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+
+/* ===== Opciones (pills) */
+.opts{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+.seg{background:var(--card); border:1px solid rgba(255,255,255,.12); border-radius:999px; padding:4px}
+.seg button{background:transparent; border:none; color:var(--text); padding:6px 10px; border-radius:999px; cursor:pointer}
+.seg button.active{background:#0ea5e9; font-weight:800}
+
+/* ===== Ring */
+.ring{width:34px; height:34px; border-radius:50%; border:3px solid rgba(255,255,255,.15); position:relative}
+.ring::after{content:attr(data-pct) "%"; position:absolute; inset:0; display:grid; place-items:center; font-size:.7rem}
+
+/* ===== Responsive */
+@media (max-width:1200px){
+  .main{
+    grid-template-columns:
+      clamp(220px, 26vw, 320px)
+      minmax(560px, 1fr)
+      clamp(220px, 26vw, 320px);
+  }
+}
+@media (max-width:900px){
+  .main{
+    grid-template-columns:1fr;
+    grid-auto-rows:auto;
+  }
+  .router{left:50%}
+}
