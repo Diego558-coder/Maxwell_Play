@@ -27,5 +27,22 @@ services:
       timeout: 5s
       retries: 10
 
+  backend:
+    build:
+      context: ./backend
+    container_name: maxwellplay-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - PORT=3000
+    depends_on:
+      - db
+
 volumes:
   db_data:
