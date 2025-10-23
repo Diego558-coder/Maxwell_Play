@@ -28,7 +28,7 @@ services:
       retries: 10
 
   backend:
-    image: node:20-alpine
+  image: node:20
     container_name: maxwellplay-backend
     working_dir: /app
     restart: unless-stopped
