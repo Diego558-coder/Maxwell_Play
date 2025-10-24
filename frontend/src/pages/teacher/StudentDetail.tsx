@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import api from "@/lib/api";
 import { isAxiosError } from "axios";
 import type { AxiosResponse } from "axios";
+import "./teacher.css";
 
 type Insignia = "oro" | "plata" | "bronce" | "participó" | "—";
 

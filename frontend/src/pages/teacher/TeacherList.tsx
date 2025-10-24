@@ -4,6 +4,7 @@ import api from "@/lib/api";
 import { cerrarSesion } from "@/state/session";
 import { isAxiosError } from "axios";
 import type { AxiosResponse } from "axios";
+import "./teacher.css";
 
 type Row = {
   id_estudiante: number;
