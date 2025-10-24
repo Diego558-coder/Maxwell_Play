@@ -27,13 +27,13 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-dvh w-screen gradient-login grid place-items-center px-4">
+  <div className="min-h-screen w-screen gradient-login flex items-center justify-center px-4 py-10">
       {/* Cabecera con logo */}
       <style>{`
         .gradient-login { background: linear-gradient(135deg,#667eea 0%, #764ba2 100%); }
       `}</style>
 
-      <div className="w-full max-w-md">
+  <div className="w-full max-w-sm md:max-w-md">
         {/* Encabezado */}
         <div className="text-center mb-6">
           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
