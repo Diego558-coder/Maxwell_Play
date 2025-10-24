@@ -1,20 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import axios from 'axios';
-import type { AxiosResponse, AxiosError } from 'axios';
-
-const handleResponse = (response: AxiosResponse) => {
-  console.log(response.data);
-};
-
-const handleError = (error: AxiosError) => {
-  console.error(error.message);
-};
-
-const api = axios.create({ baseURL: '/api' });
-const isAxiosError = (error: unknown): error is AxiosError => {
-  return axios.isAxiosError(error);
-};
+import api from "@/lib/api";
+import { isAxiosError } from "axios";
+import type { AxiosResponse } from "axios";
 
 type Insignia = "oro" | "plata" | "bronce" | "participó" | "—";
 
@@ -66,13 +54,13 @@ export default function StudentDetail() {
 
     api
       .get<Item[]>(`/api/teacher/students/${studentId}/resume`)
-      .then((response) => {
+      .then((response: AxiosResponse<Item[]>) => {
         if (!isCancelled) {
           setItems(response.data);
           setStatus("ready");
         }
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         if (!isCancelled) {
           setItems([]);
           setStatus("error");
