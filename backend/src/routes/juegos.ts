@@ -51,6 +51,13 @@ router.post("/:id/progreso", requireAuth, async (req, res) => {
   const now = new Date();
   const inicio = new Date(now.getTime() - tiempo * 1000);
 
+  // Asegurar que exista el registro en Estudiante (por bases legacy sin seed actualizado)
+  const codigo = `ALU-${String(user.id_usuario).padStart(4, "0")}`;
+  await pool.query(
+    "INSERT IGNORE INTO Estudiante (id_estudiante, codigo, grado) VALUES (?, ?, '7°')",
+    [user.id_usuario, codigo]
+  );
+
   // Leer progreso actual
   const [rows] = await pool.query(
     "SELECT id_progreso, mejor_tiempo, mejor_medalla FROM Progreso WHERE id_estudiante=? AND id_juego=? LIMIT 1",

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import CargaElectrica from "./index";
 import { useReglasJuego } from "@/hooks/useReglasJuego";
 import { postProgreso } from "@/lib/api";
@@ -8,6 +9,7 @@ const SLUG     = "carga-electrica";
 
 export default function GameCargaElectrica() {
   const { umbrales, cargando, error } = useReglasJuego(ID_JUEGO);
+  const navigate = useNavigate();
 
   const [seg, setSeg] = useState(0);
   const [running, setRunning] = useState(false);
@@ -22,9 +24,11 @@ export default function GameCargaElectrica() {
 
   const startedRef = useRef(false);
   useEffect(() => {
-    const start = () => { if (!startedRef.current) { startedRef.current = true; setRunning(true); } };
+    const start: EventListener = () => {
+      if (!startedRef.current) { startedRef.current = true; setRunning(true); }
+    };
     window.addEventListener("pointerdown", start, { once: true });
-    return () => window.removeEventListener("pointerdown", start as any);
+    return () => window.removeEventListener("pointerdown", start);
   }, []);
 
   const medalla = useMemo<"ORO"|"PLATA"|"BRONCE"|undefined>(() => {
@@ -40,15 +44,18 @@ export default function GameCargaElectrica() {
   async function onExitoJuego() {
     setRunning(false);
     try {
-      const r = await postProgreso(ID_JUEGO, {
+      await postProgreso(ID_JUEGO, {
         tiempo_seg: seg,
         completado: 1,
         medalla,
       });
-      setMsg(r.msg || "Progreso guardado");
+  setMsg(`🏁 Juego finalizado — ${seg}s → ${medalla || "BRONCE"}`);
       localStorage.setItem("progress:" + SLUG, "1");
-    } catch (e: any) {
-      setMsg(e?.response?.data?.msg || "Error guardando progreso");
+  // Redirigir al menú tras una breve pausa
+  setTimeout(() => navigate("/menu"), 2200);
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { msg?: string } } };
+      setMsg(err?.response?.data?.msg || "Error guardando progreso");
     }
   }
 

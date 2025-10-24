@@ -38,10 +38,13 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
 
   const [papersAttracted, setPapersAttracted] = useState(false);
   const [hasWon, setHasWon] = useState(false);
-  const winTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const totalBalloons = balloons.length;
   const chargedCount = balloons.filter((b) => b.charged).length;
+  const allCharged = totalBalloons > 0 && chargedCount === totalBalloons;
 
   const exitoNotificado = useRef(false);
+  const onExitoRef = useRef(onExito);
+  useEffect(() => { onExitoRef.current = onExito; }, [onExito]);
 
   // ====== drag ======
   function handlePointerDown(e: React.PointerEvent, id: number) {
@@ -204,27 +207,19 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
 
   // ===== victoria =====
   useEffect(() => {
-    if (hasWon) return;
-    const ok = balloons.some(b => b.charged) && papersAttracted;
-    if (ok && !winTimer.current) {
-      winTimer.current = setTimeout(() => {
-        setHasWon(true);
-        if (!exitoNotificado.current) { exitoNotificado.current = true; onExito?.(); }
-        setFeedback({
-          title: "¡Felicitaciones! 🎉",
-          body:
-            "Cargaste un globo por fricción y lograste atraer los papelitos.\n\nCuando estés listo, pulsa «Continuar».",
-        });
-      }, 1200);
+    if (hasWon || !allCharged) return;
+
+    setHasWon(true);
+    if (!exitoNotificado.current) {
+      exitoNotificado.current = true;
+      onExitoRef.current?.();
     }
-    if (!ok && winTimer.current) {
-      clearTimeout(winTimer.current);
-      winTimer.current = null;
-    }
-    return () => {
-      if (winTimer.current) { clearTimeout(winTimer.current); winTimer.current = null; }
-    };
-  }, [balloons, papersAttracted, hasWon, onExito]);
+    setFeedback({
+      title: "¡Felicitaciones! 🎉",
+      body:
+        "¡Cargaste los cuatro globos por fricción!\n\nEl tiempo quedó registrado. Usa «Reiniciar» si deseas intentarlo de nuevo.",
+    });
+  }, [allCharged, hasWon]);
 
   // ===== física =====
   useEffect(() => {
@@ -349,12 +344,11 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
     setHasWon(false);
     setPapersAttracted(false);
     resetPapersTransform();
-    if (winTimer.current) { clearTimeout(winTimer.current); winTimer.current = null; }
 
     setTimeout(() => {
       setFeedback({
         title: "👋 ¡Bienvenido!",
-        body: "Objetivo: demostrar la atracción eléctrica.\n\n1) Toma un globo.\n2) Frótalo con el cabello.\n3) Acércalo a los papelitos.",
+        body: "Objetivo: carga los cuatro globos por fricción y luego atrae los papelitos.\n\n1) Frota cada globo con el cabello.\n2) Cuando todos estén cargados, acércalos a los papelitos.\n3) ¡Haz que los papelitos se muevan para ganar!",
       });
     }, 50);
   }, []);
@@ -369,6 +363,9 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
       style={{ minHeight: "80vh" }}
     >
       <Link to="/menu" className="absolute top-4 left-4 z-50 px-4 py-3 rounded-xl bg-white/20 text-white font-extrabold text-xl md:text-2xl hover:bg-white/30">← Menú</Link>
+      <div className="absolute top-4 right-4 z-50 px-4 py-3 rounded-xl bg-white/20 text-white font-bold text-base md:text-lg backdrop-blur">
+        🔋 Globos cargados: {chargedCount}/{totalBalloons}
+      </div>
 
       <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 p-6 relative">
         {/* Columna 1: Persona */}
