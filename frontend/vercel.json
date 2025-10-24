@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install --legacy-peer-deps --include=optional",
+  "installCommand": "npm install --legacy-peer-deps --include=optional && npm install @rollup/rollup-linux-x64-gnu@4.52.5 lightningcss-linux-x64-gnu@1.30.2",
   "buildCommand": "npm run build",
   "framework": "vite"
 }
