@@ -107,4 +107,17 @@ router.post("/:id/progreso", requireAuth, async (req, res) => {
   res.json({ msg: "Progreso actualizado" });
 });
 
+router.delete("/progreso", requireAuth, async (req, res) => {
+  const user = (req as any).user;
+
+  if (!user || user.rol !== "ESTUDIANTE") {
+    return res.status(403).json({ msg: "Solo los estudiantes pueden reiniciar su progreso" });
+  }
+
+  await pool.query("DELETE FROM juego_sesiones WHERE id_estudiante=?", [user.id_usuario]);
+  await pool.query("DELETE FROM Progreso WHERE id_estudiante=?", [user.id_usuario]);
+
+  res.json({ msg: "Progreso reiniciado" });
+});
+
 export default router;

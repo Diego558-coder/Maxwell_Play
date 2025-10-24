@@ -61,6 +61,7 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
 
   const [hint, setHint] = useState("Las zonas de destino se iluminan al tomar una pieza.");
   const [toast, setToast] = useState<string | null>(null);
+  const [winAchieved, setWinAchieved] = useState(false);
 
   // ===== utilidades SVG
   const bringToFront = (el?: Element | null) => el?.parentNode?.appendChild(el);
@@ -250,6 +251,11 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
 
   // ===== pedalear
   useEffect(() => {
+    if (winAchieved) {
+      rotFront.current?.classList.remove("spin");
+      rotRear.current?.classList.remove("spin");
+      return;
+    }
     let id: number | undefined;
     if (state.pedaling) {
       rotFront.current?.classList.add("spin");
@@ -277,7 +283,7 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
       cool();
     }
     return () => { if (id) window.clearTimeout(id); };
-  }, [state.pedaling]);
+  }, [state.pedaling, winAchieved]);
 
   // medidor / bombillo / hints
   const step1 = state.wheelsMounted.front && state.wheelsMounted.rear;
@@ -288,22 +294,28 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
   useEffect(() => {
     if (fill.current) fill.current.style.width = `${state.power | 0}%`;
     if (pct.current) pct.current.textContent = `${state.power | 0}%`;
-    const ok = state.power >= 60 && ready;
+    const ok = state.power >= 100 && ready;
     bulbGlass.current?.classList.toggle("bulb-lit", ok);
 
     if (!step1) setHint("Encaja las dos ruedas en los ejes verdes.");
     else if (!state.dynamoOnWheel) setHint("Apoya la dínamo: su rodillo debe tocar la rueda trasera (izquierda).");
     else if (!step3) setHint("Conecta cables: rojo al + y negro al – (en la dínamo y el bombillo).");
-    else setHint("¡Listo! Pedalea y mantén la potencia > 60%.");
+    else if (state.power >= 100) setHint("¡Excelente! Llegaste al 100%. Espera un momento.");
+    else setHint("¡Listo! Pedalea hasta que la potencia llegue a 100%.");
   }, [state, ready, step1, step3]);
 
-  // Disparar onWin cuando se mantenga potencia >=60% y todo esté listo durante ~1s
   useEffect(() => {
-    if (!onWin) return;
-    let t: number | undefined;
-    if (ready && state.power >= 60) t = window.setTimeout(() => onWin?.(), 1000);
+    if (winAchieved || !ready || state.power < 100) return;
+    setWinAchieved(true);
+    setState((s) => (s.pedaling ? { ...s, pedaling: false } : s));
+  }, [ready, state.power, winAchieved]);
+
+  // Disparar onWin cuando se alcanza el 100%
+  useEffect(() => {
+    if (!onWin || !winAchieved) return;
+    const t = window.setTimeout(() => onWin?.(), 600);
     return () => { if (t) clearTimeout(t); };
-  }, [ready, state.power, onWin]);
+  }, [winAchieved, onWin]);
 
   // listeners: ruedas, dínamo, cables
   useEffect(() => {
@@ -366,6 +378,7 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
 
   // reset (usa START)
   const reset = () => {
+    setWinAchieved(false);
     setState({
       wheelsMounted: { front: false, rear: false },
       dynamoOnWheel: false,
@@ -404,7 +417,7 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
     }
   };
 
-  const pedalToggle = () => step3 && setState((s) => ({ ...s, pedaling: !s.pedaling }));
+  const pedalToggle = () => step3 && !winAchieved && setState((s) => ({ ...s, pedaling: !s.pedaling }));
   const show = (msg: string, ms = 3500) => { setToast(msg); setTimeout(() => setToast(null), ms); };
 
   // Bloquear scroll del body mientras el juego está activo
@@ -438,7 +451,7 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
         <div className={`step ${(state.connections.plus && state.connections.minus) ? "done" : state.dynamoOnWheel ? "active" : ""}`}>
           <span className="dot" /> 3) Conecta <b>cables</b>
         </div>
-        <div className={`step ${(state.connections.plus && state.connections.minus) ? (state.pedaling ? "done" : "active") : ""}`}>
+        <div className={`step ${(state.connections.plus && state.connections.minus) ? (state.power >= 100 ? "done" : "active") : ""}`}>
           <span className="dot" /> 4) <b>Pedalea</b>
         </div>
         <div className="text-sm opacity-90 mt-2">{hint}</div>

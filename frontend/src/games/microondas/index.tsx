@@ -32,6 +32,7 @@ const allowedZoneByComponent: Record<string, string> = {
 };
 
 export default function GameAmpereMaxwellScene({ onWin }: { onWin?: () => void }) {
+  const COOK_SECONDS = 7;
   const exitoNotificado = useRef(false);
   const frameRef = useRef<HTMLDivElement | null>(null);
   const interiorRef = useRef<HTMLDivElement | null>(null);
@@ -57,7 +58,7 @@ export default function GameAmpereMaxwellScene({ onWin }: { onWin?: () => void }
     foodPlatePlaced: false,
     isRunning: false,
     assemblyComplete: false,
-    timeLeft: 120,
+    timeLeft: COOK_SECONDS,
   });
 
   // zonas relativas al frame
@@ -242,15 +243,16 @@ export default function GameAmpereMaxwellScene({ onWin }: { onWin?: () => void }
   showFeedback(`<h3>❌ Primero ensambla todos los componentes.</h3>`);
       return;
     }
-    setGs((s) => ({ ...s, isRunning: !s.isRunning, timeLeft: s.isRunning ? s.timeLeft : 120 }));
+    setGs((s) => ({ ...s, isRunning: !s.isRunning, timeLeft: s.isRunning ? s.timeLeft : COOK_SECONDS }));
   };
 
   // reloj / animaciones
   useEffect(() => {
     if (displayRef.current) {
-      const m = String(Math.floor(gs.timeLeft / 60)).padStart(2, "0");
-      const sec = String(gs.timeLeft % 60).padStart(2, "0");
-      displayRef.current.textContent = gs.isRunning ? `${m}:${sec}` : "00:00";
+      const secondsToShow = gs.timeLeft;
+      const m = String(Math.floor(secondsToShow / 60)).padStart(2, "0");
+      const sec = String(secondsToShow % 60).padStart(2, "0");
+      displayRef.current.textContent = `${m}:${sec}`;
     }
 
     if (gs.isRunning) {
@@ -324,7 +326,7 @@ export default function GameAmpereMaxwellScene({ onWin }: { onWin?: () => void }
     stopAll();
     setGs({
       magnetronPlaced: false, powerSourcePlaced: false, metalCavityPlaced: false,
-      doorPlaced: false, foodPlatePlaced: false, isRunning: false, assemblyComplete: false, timeLeft: 120,
+      doorPlaced: false, foodPlatePlaced: false, isRunning: false, assemblyComplete: false, timeLeft: COOK_SECONDS,
     });
     frameRef.current?.querySelectorAll<HTMLDivElement>(".drop-zone").forEach((z) => {
       z.classList.remove("filled"); z.textContent = z.dataset.label ?? "";
@@ -335,7 +337,7 @@ export default function GameAmpereMaxwellScene({ onWin }: { onWin?: () => void }
     hideFeedback();
     updateProgress({
       magnetronPlaced: false, powerSourcePlaced: false, metalCavityPlaced: false,
-      doorPlaced: false, foodPlatePlaced: false, isRunning: false, assemblyComplete: false, timeLeft: 120,
+      doorPlaced: false, foodPlatePlaced: false, isRunning: false, assemblyComplete: false, timeLeft: COOK_SECONDS,
     });
   };
 

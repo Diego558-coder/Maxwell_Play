@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import CargaElectrica from "./index";
 import { useReglasJuego } from "@/hooks/useReglasJuego";
 import { postProgreso } from "@/lib/api";
+import { markCompleted } from "@/lib/progress";
 
 const ID_JUEGO = 2;           // el de MySQL
 const SLUG     = "carga-electrica";
@@ -49,10 +50,10 @@ export default function GameCargaElectrica() {
         completado: 1,
         medalla,
       });
-  setMsg(`🏁 Juego finalizado — ${seg}s → ${medalla || "BRONCE"}`);
-      localStorage.setItem("progress:" + SLUG, "1");
-  // Redirigir al menú tras una breve pausa
-  setTimeout(() => navigate("/menu"), 2200);
+      markCompleted(SLUG);
+      setMsg(`🏁 Juego finalizado — ${seg}s → ${medalla || "BRONCE"}`);
+      // Redirigir al menú tras una breve pausa
+      setTimeout(() => navigate("/menu"), 2200);
     } catch (e: unknown) {
       const err = e as { response?: { data?: { msg?: string } } };
       setMsg(err?.response?.data?.msg || "Error guardando progreso");

@@ -7,6 +7,7 @@ import { markCompleted } from "@/lib/progress";
 import GameAmpereMaxwellScene from "./index";
 
 const ID_JUEGO = 1; // id registrado en la tabla Minijuego
+const LOCAL_KEY = "ampere-maxwell";
 
 type Umbrales = { oro_seg: number; plata_seg: number; bronce_seg: number };
 
@@ -45,8 +46,9 @@ export default function GameMicroondas() {
     const medalla = medallaPorTiempo(seg);
     try {
       await postProgreso(ID_JUEGO, { tiempo_seg: seg, completado: 1, medalla });
-      markCompleted("ampere-maxwell");
-      setMsg(`Progreso guardado: ${seg}s → ${medalla}`);
+      markCompleted(LOCAL_KEY);
+      setMsg(`🏁 Juego finalizado — ${seg}s → ${medalla}`);
+      setTimeout(() => navigate("/menu"), 2200);
     } catch (err) {
       console.error(err);
       setMsg("⚠️ No se pudo guardar el progreso.");
@@ -58,16 +60,16 @@ export default function GameMicroondas() {
       {/* barra superior */}
       <div className="sticky top-0 z-10 bg-white/10 backdrop-blur p-3">
         <div className="max-w-[1600px] mx-auto flex items-center justify-between text-white">
-          <h1 className="font-bold text-lg">Microondas — Ley de Ampère–Maxwell</h1>
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/menu")}
               className="px-3 py-1 rounded-lg bg-white/20 hover:bg-white/30 font-semibold text-sm"
             >
-              ⬅️ Volver al menú
+              ← Menú
             </button>
-            <div className="rounded-lg bg-white/20 px-3 py-1 font-bold">⏱ {seg}s</div>
+            <h1 className="font-bold text-lg">Microondas — Ley de Ampère–Maxwell</h1>
           </div>
+          <div className="rounded-lg bg-white/20 px-3 py-1 font-bold">⏱ {seg}s</div>
         </div>
       </div>
 

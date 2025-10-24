@@ -93,7 +93,18 @@ export default function Menu() {
           )}
         </div>
         <button
-          onClick={() => { resetAll(); location.reload(); }}
+          onClick={async () => {
+            if (!window.confirm("¿Seguro que deseas reiniciar tu progreso? Esta acción no se puede deshacer.")) {
+              return;
+            }
+            try {
+              await resetAll();
+              location.reload();
+            } catch (err) {
+              console.error(err);
+              alert("No se pudo reiniciar el progreso. Intenta nuevamente.");
+            }
+          }}
           className="mt-3 md:mt-4 px-3 py-1 rounded bg-white/20 hover:bg-white/30 font-bold"
           title="Reinicia el progreso de todos los juegos"
         >
@@ -137,14 +148,19 @@ export default function Menu() {
 
                   <div className="mt-4">
                     {completed ? (
-                      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 cursor-not-allowed select-none font-bold"
-                            aria-disabled="true" title="Ya completado">
+                      <span
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 cursor-not-allowed select-none font-bold"
+                        aria-disabled="true"
+                        title="Ya completado"
+                      >
                         🚫 No disponible
                       </span>
                     ) : (
-          <Link to={c.path}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/25 backdrop-blur hover:bg-white/35 font-bold"
-                            aria-label={`Jugar ${c.title}`}>
+                      <Link
+                        to={c.path}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/25 backdrop-blur hover:bg-white/35 font-bold"
+                        aria-label={`Jugar ${c.title}`}
+                      >
                         ▶ Play
                       </Link>
                     )}

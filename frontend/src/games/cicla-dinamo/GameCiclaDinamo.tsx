@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import GameCiclaDinamoScene from "./Scene";
 // Si en tu proyecto usas lo mismo que el tren:
 import { useReglasJuego } from "@/hooks/useReglasJuego";
 import { postProgreso } from "@/lib/api";
+import { markCompleted } from "@/lib/progress";
 
 const ID_JUEGO = 4; // id asignado en la tabla Minijuego
 
@@ -11,8 +13,9 @@ type Umbrales = { oro_seg: number; plata_seg: number; bronce_seg: number };
 export default function GameCiclaDinamo() {
   const [seg, setSeg] = useState(0);
   const [running, setRunning] = useState(true);
-  const [, setMsg] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
   const timerRef = useRef<number | null>(null);
+  const navigate = useNavigate();
 
   const { umbrales } = useReglasJuego(ID_JUEGO);
 
@@ -42,14 +45,28 @@ export default function GameCiclaDinamo() {
     const medalla = medallaPorTiempo(seg);
     try {
       await postProgreso(ID_JUEGO, { tiempo_seg: seg, completado: 1, medalla });
-      setMsg(`Progreso guardado: ${seg}s → ${medalla}`);
-    } catch {
-      setMsg("⚠️ No se pudo guardar el progreso.");
+      markCompleted("cicla-dinamo");
+      setMsg(`🏁 Juego finalizado — ${seg}s → ${medalla}`);
+      setTimeout(() => navigate("/menu"), 2200);
+    } catch (e) {
+      const err = e as { response?: { data?: { msg?: string } } };
+      setMsg(err?.response?.data?.msg || "⚠️ No se pudo guardar el progreso.");
     }
   }
 
   // La Scene ahora muestra la cabecera y el cronómetro integrado
   return (
-    <GameCiclaDinamoScene onWin={onExito} timeSec={seg} />
+    <div className="relative h-[100dvh] w-full">
+      <GameCiclaDinamoScene onWin={onExito} timeSec={seg} />
+
+      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 text-white/90 text-sm whitespace-nowrap">
+        {um && (
+          <div className="mb-1 bg-white/15 rounded px-3 py-1">
+            Umbrales → Oro ≤ {um.oro_seg}s · Plata ≤ {um.plata_seg}s · Bronce ≤ {um.bronce_seg}s
+          </div>
+        )}
+        {msg && <div className="bg-white/20 rounded px-3 py-1">{msg}</div>}
+      </div>
+    </div>
   );
 }

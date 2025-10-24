@@ -1,5 +1,5 @@
 // src/games/gauss-magnetico/index.tsx
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./gauss.css";
 
@@ -31,6 +31,7 @@ export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void 
   const [moving, setMoving] = useState(false);
   const [showWin, setShowWin] = useState(false);
   const [showNext, setShowNext] = useState(false);
+  const winTriggered = useRef(false);
 
   // Locomotora fija S–N (izq-der)
   const locoRight: Pole = "N";
@@ -134,11 +135,15 @@ export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void 
 
   // Win check en cada render
   const hasAll = useMemo(() => slots.filter(Boolean).length === 4, [slots]);
-  if (!moving && hasAll && noGaps() && allCouplersOK() && !showWin) {
-    // inicia anim + muestra modal
-    setMoving(true);
-    setTimeout(() => setShowWin(true), 50);
-  }
+  useEffect(() => {
+    if (moving || showWin || winTriggered.current) return;
+    if (hasAll && noGaps() && allCouplersOK()) {
+      setMoving(true);
+      setTimeout(() => setShowWin(true), 50);
+      winTriggered.current = true;
+      onWin?.();
+    }
+  }, [hasAll, moving, showWin, onWin]);
 
   function onReset() {
     setBank(initialBank);
@@ -148,6 +153,7 @@ export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void 
     setMoving(false);
     setShowWin(false);
     setShowNext(false);
+    winTriggered.current = false;
   }
 
   function onHelp() {
@@ -165,7 +171,6 @@ export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void 
   function onAcceptWin() {
     setShowWin(false);
     setShowNext(true);
-    onWin?.();
   }
 
   return (

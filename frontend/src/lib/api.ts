@@ -52,4 +52,9 @@ export const postProgreso = async (
   return data;
 };
 
+export const resetProgreso = async () => {
+  const { data } = await api.delete<{ msg: string }>("/juegos/progreso");
+  return data;
+};
+
 export default api;

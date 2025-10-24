@@ -1,7 +1,9 @@
 // src/games/gauss-magnetico/GameGaussMagnetico.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useReglasJuego } from "@/hooks/useReglasJuego";
 import { postProgreso } from "@/lib/api";
+import { markCompleted } from "@/lib/progress";
 import GameGaussMagneticoScene from "./index";
 
 const ID_JUEGO = 3;
@@ -13,6 +15,7 @@ export default function GameGaussMagnetico() {
   const [running, setRunning] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
   const timerRef = useRef<number | null>(null);
+  const navigate = useNavigate();
 
   const { umbrales } = useReglasJuego(ID_JUEGO);
 
@@ -44,9 +47,12 @@ export default function GameGaussMagnetico() {
     const medalla = medallaPorTiempo(seg);
     try {
       await postProgreso(ID_JUEGO, { tiempo_seg: seg, completado: 1, medalla });
-      setMsg(`Progreso guardado: ${seg}s → ${medalla}`);
-    } catch {
-      setMsg("⚠️ No se pudo guardar el progreso.");
+      markCompleted("gauss-magnetico");
+      setMsg(`🏁 Juego finalizado — ${seg}s → ${medalla}`);
+      setTimeout(() => navigate("/menu"), 2200);
+    } catch (e) {
+      const err = e as { response?: { data?: { msg?: string } } };
+      setMsg(err?.response?.data?.msg || "⚠️ No se pudo guardar el progreso.");
     }
   }
 
