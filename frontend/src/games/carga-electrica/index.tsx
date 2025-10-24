@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import "./carga.css";
 
 import {
-  BALLOON_H, BALLOON_W, ROPE_LEN, EXPLANATION_VIDEO_PATH,
+  BALLOON_H, BALLOON_W, ROPE_LEN,
   PAPER_MAX_PULL, PAPER_MAX_ROT, PAPER_MAX_SCALE, PAPER_PULL_RADIUS, PAPER_PULL_SMOOTH,
   GRAVITY_BASE, GRAVITY_CHARGED, BOUNCE, AIR_FRICTION, WALL_BOUNCE, K_REPEL, MAX_REPEL_STEP
 } from "./constants";
@@ -14,8 +14,6 @@ import { getLocalRect, onTopOfTable, makeElectrons } from "./utils";
 import PersonHair from "./components/PersonHair";
 
 export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
-  const navigate = useNavigate();
-
   const gameRef = useRef<HTMLDivElement | null>(null);
   const hairRef = useRef<HTMLDivElement | null>(null);
   const balloonsAreaRef = useRef<HTMLDivElement | null>(null);
@@ -33,7 +31,6 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
 
   const [feedback, setFeedback] = useState<ModalState>(null);
-  const introShown = useRef(false);
   const chargedShown = useRef(false);
 
   const [papersAttracted, setPapersAttracted] = useState(false);
@@ -91,7 +88,11 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
   }, []);
   function handlePointerUp(e: React.PointerEvent, id: number) {
     if (hasWon) return;
-    try { (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId); } catch {}
+    try {
+      (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId);
+    } catch (error) {
+      console.error('Error liberando captura de puntero:', error);
+    }
     if (draggingId === id) setDraggingId(null);
     finishDragAtClient(id, e.clientX, e.clientY);
   }
