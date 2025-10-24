@@ -1,8 +1,18 @@
 {
-  "installCommand": "npm install --legacy-peer-deps --include=optional",
-  "buildCommand": "npm run build",
-  "framework": "vite",
+  "version": 2,
+  "builds": [
+    {
+      "src": "vite.config.ts",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
