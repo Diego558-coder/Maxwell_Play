@@ -14,7 +14,7 @@
 .t-cell.ok{color:#16a34a;font-weight:700}
 .t-cell.warn{color:#f59e0b;font-weight:700}
 .t-cell.muted{color:#64748b}
-.t-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.t-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
 .t-card.game .t-card-title{font-weight:800;margin-bottom:8px}
 .t-meta{display:grid;gap:4px;color:#334155;margin-bottom:10px}
 .t-badges{display:flex;gap:8px;align-items:center;margin-top:auto}
