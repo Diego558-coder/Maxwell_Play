@@ -118,11 +118,6 @@ export default function StudentDetail() {
               <div className="t-badges">
                 <span className={pillClass(item.insignia)}>{item.insignia}</span>
               </div>
-              <div className="t-actions">
-                <Link className="t-btn small" to={`/play/${item.slug}`}>
-                  Ver juego
-                </Link>
-              </div>
             </div>
           ))}
         {!isLoading && !isError && items.length === 0 && <div className="t-card">Sin partidas aún.</div>}
