@@ -71,42 +71,49 @@ router.get("/students/:id/resume", async (req, res) => {
     const resumen = await q<ResumeRow>(
       `
       SELECT
-        j.id_juego,
-        j.slug,
-        j.nombre AS juego_nombre,
-        s.id_sesion,
-        s.inicio_ts,
-        s.fin_ts,
-        CASE
-          WHEN s.id_sesion IS NULL THEN NULL
-          ELSE COALESCE(s.tiempo_seg, TIMESTAMPDIFF(SECOND, s.inicio_ts, s.fin_ts))
-        END AS tiempo_seg,
-        s.exito,
-        CASE
-          WHEN s.id_sesion IS NULL THEN '—'
-          WHEN s.exito = 0 THEN '—'
-          WHEN COALESCE(s.tiempo_seg, TIMESTAMPDIFF(SECOND, s.inicio_ts, s.fin_ts)) <= r.oro_seg THEN 'oro'
-          WHEN COALESCE(s.tiempo_seg, TIMESTAMPDIFF(SECOND, s.inicio_ts, s.fin_ts)) <= r.plata_seg THEN 'plata'
-          WHEN COALESCE(s.tiempo_seg, TIMESTAMPDIFF(SECOND, s.inicio_ts, s.fin_ts)) <= r.bronce_seg THEN 'bronce'
-          ELSE 'participó'
-        END AS insignia
-      FROM juegos j
-      LEFT JOIN (
-        SELECT s.*
-        FROM juego_sesiones s
-        JOIN (
-          SELECT id_juego, MAX(id_sesion) AS last_sesion_id
-          FROM juego_sesiones
-          WHERE id_estudiante = ?
-          GROUP BY id_juego
-        ) latest ON latest.id_juego = s.id_juego AND latest.last_sesion_id = s.id_sesion
-        WHERE s.id_estudiante = ?
-      ) s ON s.id_juego = j.id_juego
-      LEFT JOIN reglas_juego r ON r.id_juego = j.id_juego
-      ORDER BY j.nombre ASC
+        id_juego, slug, juego_nombre,
+        id_sesion, inicio_ts, fin_ts, tiempo_seg, exito, insignia
+      FROM vw_alumno_juego_resumen
+      WHERE id_estudiante = ?
     `,
-      [idEst, idEst]
+      [idEst]
     );
+
+    const juegos = await q<{ id_juego: number; slug: string; nombre: string }>(
+      `
+      SELECT id_juego, slug, nombre
+      FROM juegos
+      ORDER BY nombre ASC
+    `
+    );
+
+    const resumenPorJuego = new Map<number, ResumeRow>();
+    for (const row of resumen) {
+      resumenPorJuego.set(row.id_juego, row);
+    }
+
+    const merged = juegos.map((juego) => {
+      const data = resumenPorJuego.get(juego.id_juego);
+      if (data) {
+        return {
+          ...data,
+          juego_nombre: data.juego_nombre || juego.nombre,
+          slug: data.slug || juego.slug
+        };
+      }
+
+      return {
+        id_juego: juego.id_juego,
+        slug: juego.slug,
+        juego_nombre: juego.nombre,
+        id_sesion: null,
+        inicio_ts: null,
+        fin_ts: null,
+        tiempo_seg: null,
+        exito: null,
+        insignia: "—"
+      } as ResumeRow;
+    });
 
     const mejores = await q<BestRow>(
       `
@@ -125,7 +132,7 @@ router.get("/students/:id/resume", async (req, res) => {
       bestMap.set(item.id_juego, item.mejor_tiempo_seg);
     }
 
-    const out = resumen.map((r) => ({
+    const out = merged.map((r) => ({
       ...r,
       mejor_tiempo_seg: bestMap.get(r.id_juego) ?? null
     }));
