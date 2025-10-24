@@ -30,9 +30,14 @@ function Frame() {
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
           <Route element={<RequireAuth />}>
-            <Route path="/menu" element={<Menu />} />
-            <Route path="/docente" element={<TeacherList />} />
-            <Route path="/docente/alumno/:id" element={<StudentDetail />} />
+            {/* Rutas exclusivas por rol */}
+            <Route element={<OnlyEstudiante />}>
+              <Route path="/menu" element={<Menu />} />
+            </Route>
+            <Route element={<OnlyDocente />}>
+              <Route path="/docente" element={<TeacherList />} />
+              <Route path="/docente/alumno/:id" element={<StudentDetail />} />
+            </Route>
             <Route path="/play/carga-electrica" element={<GameCargaElectrica />} />
             <Route path="/play/gauss-magnetico" element={<GameGaussMagnetico />} />
             <Route path="/play/cicla-dinamo" element={<GameCiclaDinamo />} />
@@ -53,6 +58,24 @@ function RequireAuth() {
   const location = useLocation();
   if (!sesion) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  return <Outlet />;
+}
+
+function OnlyDocente() {
+  const sesion = obtenerSesion();
+  if (sesion?.rol !== "DOCENTE") {
+    // Si no es docente, envíalo al menú (estudiante por defecto)
+    return <Navigate to="/menu" replace />;
+  }
+  return <Outlet />;
+}
+
+function OnlyEstudiante() {
+  const sesion = obtenerSesion();
+  if (sesion?.rol === "DOCENTE") {
+    // Si es docente e intenta ver /menu u otra ruta de estudiante, redirige a su panel
+    return <Navigate to="/docente" replace />;
   }
   return <Outlet />;
 }

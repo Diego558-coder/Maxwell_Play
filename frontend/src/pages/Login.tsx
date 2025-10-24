@@ -12,7 +12,18 @@ export default function Login() {
     e.preventDefault();
     const ok = await doLogin(correo, contrasenia);
     if (!ok) return;
-    nav("/menu");
+    // Redirigir según el rol almacenado en localStorage tras el login
+    try {
+      const raw = localStorage.getItem("usuario");
+      const u = raw ? JSON.parse(raw) as { rol?: string } : null;
+      if (u?.rol === "DOCENTE") {
+        nav("/docente");
+      } else {
+        nav("/menu");
+      }
+    } catch {
+      nav("/menu");
+    }
   };
 
   return (

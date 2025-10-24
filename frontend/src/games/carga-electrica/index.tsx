@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./carga.css";
 
 import {
-  BALLOON_H, BALLOON_W, ROPE_LEN,
+  BALLOON_H, BALLOON_W, ROPE_LEN, EXPLANATION_VIDEO_PATH,
   PAPER_MAX_PULL, PAPER_MAX_ROT, PAPER_MAX_SCALE, PAPER_PULL_RADIUS, PAPER_PULL_SMOOTH,
   GRAVITY_BASE, GRAVITY_CHARGED, BOUNCE, AIR_FRICTION, WALL_BOUNCE, K_REPEL, MAX_REPEL_STEP
 } from "./constants";
@@ -14,6 +14,7 @@ import { getLocalRect, onTopOfTable, makeElectrons } from "./utils";
 import PersonHair from "./components/PersonHair";
 
 export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
+  const navigate = useNavigate();
 
   const gameRef = useRef<HTMLDivElement | null>(null);
   const hairRef = useRef<HTMLDivElement | null>(null);
@@ -32,13 +33,13 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
 
   const [feedback, setFeedback] = useState<ModalState>(null);
-  // const introShown = useRef(false);
+  const introShown = useRef(false);
   const chargedShown = useRef(false);
 
   const [papersAttracted, setPapersAttracted] = useState(false);
   const [hasWon, setHasWon] = useState(false);
   const winTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // const chargedCount = balloons.filter((b) => b.charged).length;
+  const chargedCount = balloons.filter((b) => b.charged).length;
 
   const exitoNotificado = useRef(false);
 
@@ -64,7 +65,7 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
     maybeCharge(id, e.clientX, e.clientY);
     updatePaperAttraction(id, e.clientX, e.clientY);
   }
-  const finishDragAtClient = useCallback((id: number) => {
+  const finishDragAtClient = useCallback((id: number, clientX: number, clientY: number) => {
     const area = balloonsAreaRef.current;
     const table = centerTableRef.current;
     if (!area) return;
@@ -83,21 +84,19 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
         return { ...b, vel: { x: 0, y: 0 }, falling: true };
       }),
     );
-    // La atracción de papel se actualiza en los handlers de pointerup tras finalizar el drag
+    updatePaperAttraction(id, clientX, clientY);
   }, []);
   function handlePointerUp(e: React.PointerEvent, id: number) {
     if (hasWon) return;
-  try { (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId); } catch { /* noop */ }
+    try { (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId); } catch {}
     if (draggingId === id) setDraggingId(null);
-  finishDragAtClient(id);
-    updatePaperAttraction(id, e.clientX, e.clientY);
+    finishDragAtClient(id, e.clientX, e.clientY);
   }
   useEffect(() => {
     function onWinPointerUp(ev: PointerEvent) {
       if (hasWon) return;
       if (draggingId == null) return;
-  finishDragAtClient(draggingId);
-      updatePaperAttraction(draggingId, ev.clientX, ev.clientY);
+      finishDragAtClient(draggingId, ev.clientX, ev.clientY);
       setDraggingId(null);
     }
     window.addEventListener("pointerup", onWinPointerUp);
@@ -366,60 +365,46 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
   return (
     <div
       ref={gameRef}
-      className="relative flex flex-col text-white rounded-xl"
-      style={{ minHeight: "calc(100dvh - 56px - 80px)" }} // barra + margen aprox
+      className="w-full relative flex flex-col bg-gradient-to-br from-indigo-400 to-purple-700 overflow-hidden rounded-xl"
+      style={{ minHeight: "80vh" }}
     >
-      <Link
-        to="/menu"
-        className="absolute top-4 left-4 z-50 px-4 py-3 rounded-xl bg-white/20 text-white font-extrabold text-xl md:text-2xl hover:bg-white/30"
-      >
-        ← Menú
-      </Link>
+      <Link to="/menu" className="absolute top-4 left-4 z-50 px-4 py-3 rounded-xl bg-white/20 text-white font-extrabold text-xl md:text-2xl hover:bg-white/30">← Menú</Link>
 
-      {/* Escena dividida en 2 filas: 60% arriba (persona + papelitos), 40% abajo (mesa + globos) */}
-      <div className="flex-1 grid grid-rows-[60%_40%] gap-4 p-6">
-        {/* Fila superior: 3 columnas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Persona */}
-          <PersonHair hairRef={hairRef as React.RefObject<HTMLDivElement>} disabled={hasWon} />
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 p-6 relative">
+        {/* Columna 1: Persona */}
+        <PersonHair hairRef={hairRef as React.RefObject<HTMLDivElement>} disabled={hasWon} />
 
-          {/* Hueco central para el título grande si quieres */}
-          <div className="hidden md:flex items-center">
-            <h2 className="text-3xl md:text-4xl font-extrabold">Frota con el cabello</h2>
+        {/* Columna 3: Papelitos */}
+        <div className="flex flex-col items-end md:col-start-3 md:justify-self-end md:place-self-end md:mr-6">
+          <div ref={papersTableRef} className="relative w-[450px] h-[100px] bg-amber-800 rounded-lg mb-9 shadow-lg">
+            <div className="absolute left-5 -bottom-10 w-2 h-10 bg-amber-900" />
+            <div className="absolute right-5 -bottom-10 w-2 h-10 bg-amber-900" />
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-[100px] flex flex-wrap gap-1 justify-center">
+              {Array.from({ length: 30 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="paper-piece w-[15px] h-[15px] bg-white rounded-sm"
+                  style={{
+                    transition: "transform 0.35s ease",
+                    willChange: "transform",
+                    animation: !papersAttracted ? "paperFloat 2.4s ease-in-out infinite" : "none",
+                  }}
+                />
+              ))}
+            </div>
           </div>
-
-          {/* Papelitos */}
-          <div className="flex flex-col items-end md:justify-self-end md:place-self-end md:mr-6">
-            <div ref={papersTableRef} className="relative w-[520px] h-[120px] bg-amber-800 rounded-lg mb-6 shadow-lg">
-              <div className="absolute left-6 -bottom-10 w-2 h-10 bg-amber-900" />
-              <div className="absolute right-6 -bottom-10 w-2 h-10 bg-amber-900" />
-              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-[120px] flex flex-wrap gap-1 justify-center">
-                {Array.from({ length: 36 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="paper-piece w-[14px] h-[14px] bg-white rounded-sm"
-                    style={{
-                      transition: "transform 0.35s ease",
-                      willChange: "transform",
-                      animation: !papersAttracted ? "paperFloat 2.4s ease-in-out infinite" : "none",
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="w-full flex justify-end pr-1 md:pr-20">
-              <div className="text-white font-extrabold text-2xl md:text-3xl">Papelitos</div>
-            </div>
+          <div className="w-full flex justify-end pr-1 md:pr-20">
+            <div className="text-white font-extrabold text-2xl md:text-3xl">Papelitos</div>
           </div>
         </div>
 
-        {/* Fila inferior: mesa + globos */}
-        <div ref={balloonsAreaRef} className="relative rounded-xl overflow-visible">
+        {/* Área central con mesa + globos (ocupa las 3 columnas) */}
+        <div ref={balloonsAreaRef} className="relative md:col-span-3 rounded-xl overflow-visible" style={{ height: "36vh" }}>
           <div
             ref={centerTableRef}
             className="absolute left-1/2 -translate-x-1/2"
             style={{
-              bottom: 110, width: "min(1500px, calc(100% - 96px))", height: "110px",
+              bottom: 110, width: "calc(100% - 96px)", maxWidth: "1500px", height: "110px",
               borderRadius: "1rem", backgroundColor: "#92400e",
               boxShadow: "0 30px 80px rgba(0,0,0,.25), inset 0 -8px 14px rgba(0,0,0,0.12)",
               border: "1px solid #78350f",
@@ -431,7 +416,6 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
             <div className="absolute inset-x-0 top-0 h-3 rounded-t-2xl bg-amber-700/40 pointer-events-none" />
           </div>
 
-          {/* Globos */}
           {balloons.map((b) => (
             <div
               key={b.id}
@@ -443,16 +427,32 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
               title={b.charged ? "Cargado" : "Arrástrame"}
             >
               {/* Cuerda */}
-              <svg style={{ position: "absolute", left: 0, top: BALLOON_H - 2, pointerEvents: "none" }} width={BALLOON_W} height={ROPE_LEN} viewBox={`0 0 ${BALLOON_W} ${ROPE_LEN}`}>
-                {(() => {
-                  const x0 = BALLOON_W / 2, y0 = 0;
-                  const x1 = BALLOON_W / 2 + b.rope, y1 = ROPE_LEN;
-                  const cx = (x0 + x1) / 2 + b.rope * 0.35;
-                  const cy = ROPE_LEN * 0.55;
-                  const d  = `M ${x0},${y0} Q ${cx},${cy} ${x1},${y1}`;
-                  return (<><path d={d} stroke="#1f2937" strokeWidth="2" fill="none" /><circle cx={x1} cy={y1} r="2.1" fill="#111827" /></>);
-                })()}
-              </svg>
+              <div
+                style={{
+                  position: "absolute",
+                  left: BALLOON_W / 2 + b.rope,
+                  top: BALLOON_H - 2,
+                  transform: "translateX(-50%)",
+                  width: 3,
+                  height: ROPE_LEN,
+                  background: "#111827",
+                  borderRadius: "999px",
+                  pointerEvents: "none",
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: BALLOON_W / 2 + b.rope,
+                  top: BALLOON_H - 2 + ROPE_LEN - 2,
+                  transform: "translateX(-50%)",
+                  width: 8,
+                  height: 6,
+                  borderRadius: "999px 999px 0 0",
+                  background: "#0f172a",
+                  pointerEvents: "none",
+                }}
+              />
 
               {/* Globo */}
               <div

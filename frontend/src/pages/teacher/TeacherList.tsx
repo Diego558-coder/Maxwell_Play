@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { isAxiosError } from "axios";
 import api from "@/lib/api";
 import "./teacher.css";
+import { cerrarSesion } from "@/state/session";
 
 type Row = {
   id_estudiante: number;
@@ -16,6 +17,7 @@ type Row = {
 type ApiState = "idle" | "loading" | "ready" | "error";
 
 export default function TeacherList() {
+  const nav = useNavigate();
   const [params] = useSearchParams();
   const docenteId = params.get("docenteId") || "1";
   const [search, setSearch] = useState("");
@@ -72,6 +74,13 @@ export default function TeacherList() {
           />
           <button className="t-btn" onClick={() => window.print()}>
             📤 Exportar listado
+          </button>
+          <button
+            className="t-btn warn"
+            onClick={() => { cerrarSesion(); nav("/login"); }}
+            title="Cerrar la sesión actual"
+          >
+            🚪 Cerrar sesión
           </button>
         </div>
       </div>

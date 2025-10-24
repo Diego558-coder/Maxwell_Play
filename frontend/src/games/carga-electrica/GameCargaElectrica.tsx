@@ -24,7 +24,7 @@ export default function GameCargaElectrica() {
   useEffect(() => {
     const start = () => { if (!startedRef.current) { startedRef.current = true; setRunning(true); } };
     window.addEventListener("pointerdown", start, { once: true });
-    return () => window.removeEventListener("pointerdown", start);
+    return () => window.removeEventListener("pointerdown", start as any);
   }, []);
 
   const medalla = useMemo<"ORO"|"PLATA"|"BRONCE"|undefined>(() => {
@@ -47,8 +47,8 @@ export default function GameCargaElectrica() {
       });
       setMsg(r.msg || "Progreso guardado");
       localStorage.setItem("progress:" + SLUG, "1");
-    } catch {
-      setMsg("Error guardando progreso");
+    } catch (e: any) {
+      setMsg(e?.response?.data?.msg || "Error guardando progreso");
     }
   }
 
@@ -56,7 +56,7 @@ export default function GameCargaElectrica() {
   if (cargando && !umbrales) return <div>Cargando umbrales…</div>;
 
   return (
-    <div className="min-h-[100dvh] w-full overflow-x-hidden bg-gradient-to-br from-indigo-500 to-purple-700 text-white">
+    <div className="min-h-[100dvh] text-white">
       {/* Encabezado + cronómetro */}
       <div className="sticky top-0 z-10 bg-gradient-to-r from-indigo-500/70 to-purple-600/70 backdrop-blur p-3">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between">
@@ -66,7 +66,7 @@ export default function GameCargaElectrica() {
       </div>
 
       {/* Escenario del juego a lo ancho */}
-      <div className="max-w-[1600px] mx-auto px-6 pb-8">
+      <div className="max-w-[1400px] mx-auto p-6 bg-gradient-to-br from-indigo-500 to-purple-700 rounded-xl">
         <CargaElectrica onExito={onExitoJuego} />
         <div className="mt-3 text-sm opacity-90">
           {umbrales && <>Umbrales → Oro ≤ {umbrales.oro_seg}s · Plata ≤ {umbrales.plata_seg}s · Bronce ≤ {umbrales.bronce_seg}s</>}
