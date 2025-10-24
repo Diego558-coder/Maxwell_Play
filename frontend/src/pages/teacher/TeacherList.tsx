@@ -1,9 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { isAxiosError } from "axios";
-import api from "@/lib/api";
-import "./teacher.css";
-import { cerrarSesion } from "@/state/session";
+import axios, { AxiosResponse, AxiosError } from 'axios';
+
+const handleResponse = (response: AxiosResponse) => {
+  console.log(response.data);
+};
+
+const handleError = (error: AxiosError) => {
+  console.error(error.message);
+};
+
+const api = axios.create({ baseURL: '/api' });
+const isAxiosError = (error: unknown): error is AxiosError => {
+  return axios.isAxiosError(error);
+};
+
+const cerrarSesion = () => {
+  console.log('Sesión cerrada');
+};
 
 type Row = {
   id_estudiante: number;

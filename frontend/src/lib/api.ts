@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosRequestConfig } from 'axios';
 
 const baseURL = import.meta.env.VITE_API_BASE ?? "https://maxwellplay-production.up.railway.app";
 
@@ -55,6 +55,10 @@ export const postProgreso = async (
 export const resetProgreso = async () => {
   const { data } = await api.delete<{ msg: string }>("/juegos/progreso");
   return data;
+};
+
+export const apiCall = (config: AxiosRequestConfig) => {
+  return axios(config);
 };
 
 export default api;
