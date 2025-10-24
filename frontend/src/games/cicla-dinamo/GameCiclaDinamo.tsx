@@ -4,7 +4,7 @@ import GameCiclaDinamoScene from "./Scene";
 import { useReglasJuego } from "@/hooks/useReglasJuego";
 import { postProgreso } from "@/lib/api";
 
-const ID_JUEGO = 3; // pon el id que te corresponda
+const ID_JUEGO = 4; // id asignado en la tabla Minijuego
 
 type Umbrales = { oro_seg: number; plata_seg: number; bronce_seg: number };
 

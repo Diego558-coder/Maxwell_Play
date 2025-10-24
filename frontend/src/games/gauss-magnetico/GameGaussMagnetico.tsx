@@ -4,7 +4,7 @@ import { useReglasJuego } from "@/hooks/useReglasJuego";
 import { postProgreso } from "@/lib/api";
 import GameGaussMagneticoScene from "./index";
 
-const ID_JUEGO = 2;
+const ID_JUEGO = 3;
 
 type Umbrales = { oro_seg: number; plata_seg: number; bronce_seg: number };
 

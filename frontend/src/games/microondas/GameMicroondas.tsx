@@ -6,7 +6,7 @@ import { postProgreso } from "@/lib/api";
 import { markCompleted } from "@/lib/progress";
 import GameAmpereMaxwellScene from "./index";
 
-const ID_JUEGO = 4; // ← este juego es el #4
+const ID_JUEGO = 1; // id registrado en la tabla Minijuego
 
 type Umbrales = { oro_seg: number; plata_seg: number; bronce_seg: number };
 

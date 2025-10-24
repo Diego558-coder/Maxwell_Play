@@ -375,8 +375,8 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
         <PersonHair hairRef={hairRef as React.RefObject<HTMLDivElement>} disabled={hasWon} />
 
         {/* Columna 3: Papelitos */}
-        <div className="flex flex-col items-end md:col-start-3 md:justify-self-end md:place-self-end md:mr-6">
-          <div ref={papersTableRef} className="relative w-[450px] h-[100px] bg-amber-800 rounded-lg mb-9 shadow-lg">
+        <div className="flex flex-col items-center md:items-end md:col-start-3 md:justify-self-end md:place-self-end md:mr-6 gap-4">
+          <div ref={papersTableRef} className="relative w-full max-w-[450px] h-[100px] bg-amber-800 rounded-lg shadow-lg">
             <div className="absolute left-5 -bottom-10 w-2 h-10 bg-amber-900" />
             <div className="absolute right-5 -bottom-10 w-2 h-10 bg-amber-900" />
             <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-[100px] flex flex-wrap gap-1 justify-center">
@@ -393,8 +393,8 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
               ))}
             </div>
           </div>
-          <div className="w-full flex justify-end pr-1 md:pr-20">
-            <div className="text-white font-extrabold text-2xl md:text-3xl">Papelitos</div>
+          <div className="w-full max-w-[450px] text-center md:text-right text-white font-extrabold text-2xl md:text-3xl drop-shadow-md">
+            Papelitos
           </div>
         </div>
 
