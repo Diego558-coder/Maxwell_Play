@@ -20,7 +20,8 @@ function App() {
 
 function Frame() {
   const { pathname } = useLocation();
-  const fullBleed = pathname.startsWith("/play/") || pathname === "/menu";
+  const fullBleed =
+    pathname.startsWith("/play/") || pathname === "/menu" || pathname === "/login";
 
   return (
     <div className="min-h-[100dvh] flex flex-col">
