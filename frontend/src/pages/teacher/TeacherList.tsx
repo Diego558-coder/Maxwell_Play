@@ -20,7 +20,6 @@ export default function TeacherList() {
   const nav = useNavigate();
   const [params] = useSearchParams();
   const docenteId = params.get("docenteId") || "1";
-  const [search, setSearch] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [status, setStatus] = useState<ApiState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -34,8 +33,7 @@ export default function TeacherList() {
       .get<Row[]>("/api/teacher/students", {
         params: {
           docenteId,
-          ...(search.trim() ? { search: search.trim() } : {})
-        }
+        },
       })
       .then((response: AxiosResponse<Row[]>) => {
         if (!isCancelled) {
@@ -57,7 +55,7 @@ export default function TeacherList() {
     return () => {
       isCancelled = true;
     };
-  }, [docenteId, search]);
+  }, [docenteId]);
 
   const isLoading = status === "loading";
   const isError = status === "error";
@@ -67,11 +65,6 @@ export default function TeacherList() {
       <div className="t-header">
         <div className="t-title">👨‍🏫 Vista Docente</div>
         <div className="t-actions">
-          <input
-            placeholder="Buscar por nombre o código…"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
           <button className="t-btn" onClick={() => window.print()}>
             📤 Exportar listado
           </button>
