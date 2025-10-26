@@ -12,7 +12,6 @@ type Row = {
   codigo: string;
   aprobados: number;
   pendientes: number;
-  ultima_actividad: string | null;
 };
 
 type ApiState = "idle" | "loading" | "ready" | "error";
@@ -93,7 +92,6 @@ export default function TeacherList() {
             <div>Código</div>
             <div>Aprobados</div>
             <div>Pendientes</div>
-            <div>Última actividad</div>
             <div>Acción</div>
           </div>
 
@@ -110,7 +108,6 @@ export default function TeacherList() {
                 <div className="t-cell code">{row.codigo}</div>
                 <div className="t-cell ok">{row.aprobados}</div>
                 <div className="t-cell warn">{row.pendientes}</div>
-                <div className="t-cell muted">{row.ultima_actividad ?? "—"}</div>
                 <div className="t-cell">
                   <Link
                     className="t-btn small"
