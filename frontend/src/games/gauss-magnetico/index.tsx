@@ -1,154 +1,89 @@
 // src/games/gauss-magnetico/index.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { JuegoGaussMagnetico } from "./modelos";
+import type { ConfiguracionVagon, EstadoAcoples } from "./modelos";
 import "./gauss.css";
-
-type Pole = "N" | "S";
-type Car = { id: number; left: Pole; right: Pole };
 
 const GAME_ID = "gauss-magnetico";
 const EXPLANATION_VIDEO_PATH = "/videos/explicacion-gauss-magnetico.mp4";
 
 // Banco inicial (igual al tuyo)
-const initialBank: Car[] = [
-  { id: 1, left: "S", right: "N" },
-  { id: 2, left: "S", right: "N" },
-  { id: 3, left: "N", right: "S" },
-  { id: 4, left: "S", right: "N" },
-  { id: 5, left: "N", right: "S" },
-  { id: 6, left: "S", right: "N" },
-  { id: 7, left: "N", right: "S" },
+const bancoInicial: ConfiguracionVagon[] = [
+  { id: 1, poloIzquierdo: "S", poloDerecho: "N" },
+  { id: 2, poloIzquierdo: "S", poloDerecho: "N" },
+  { id: 3, poloIzquierdo: "N", poloDerecho: "S" },
+  { id: 4, poloIzquierdo: "S", poloDerecho: "N" },
+  { id: 5, poloIzquierdo: "N", poloDerecho: "S" },
+  { id: 6, poloIzquierdo: "S", poloDerecho: "N" },
+  { id: 7, poloIzquierdo: "N", poloDerecho: "S" },
 ];
 
 export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void }) {
   const navigate = useNavigate();
 
-  // Estado 100% React
-  const [bank, setBank] = useState<Car[]>(initialBank);
-  const [slots, setSlots] = useState<Array<Car | null>>([null, null, null, null]);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [juego, setJuego] = useState(() =>
+    JuegoGaussMagnetico.crearInicial({ vagones: bancoInicial, capacidad: 4 })
+  );
   const [toast, setToast] = useState<string>("");
   const [moving, setMoving] = useState(false);
   const [showWin, setShowWin] = useState(false);
   const [showNext, setShowNext] = useState(false);
   const winTriggered = useRef(false);
 
-  // Locomotora fija S–N (izq-der)
-  const locoRight: Pole = "N";
-
-  function showToast(msg: string, ms = 2000) {
+  const showToast = (msg: string, ms = 2000) => {
     setToast(msg);
     window.setTimeout(() => setToast(""), ms);
-  }
+  };
 
-  function flip(c: Car): Car {
-    return { ...c, left: c.right, right: c.left };
-  }
+  const acoples = useMemo<EstadoAcoples>(() => juego.estadoAcoples(), [juego]);
+  const vagonesDisponibles = juego.listarVagones();
+  const ranuras = juego.obtenerRanuras();
+  const seleccionadoId = juego.seleccionadoId;
 
-  // ===== Validaciones =====
-  function polarityOkForSlot(car: Car, pos: number): boolean {
-    if (pos === 0) return car.left !== locoRight;
-    const leftNeigh = slots[pos - 1];
-    if (!leftNeigh) return true; // permitir colocar aunque falte el anterior; ganar igual exige sin huecos
-    return car.left !== leftNeigh.right;
-  }
-  function noGaps(): boolean {
-    let gap = false;
-    for (let i = 0; i < slots.length; i++) {
-      if (slots[i] == null) gap = true;
-      else if (gap) return false;
-    }
-    return true;
-  }
-  function allCouplersOK(): boolean {
-    if (!slots[0]) return false;
-    if (slots[0]!.left === locoRight) return false;
-    for (let i = 1; i < slots.length; i++) {
-      if (slots[i] && slots[i - 1]) {
-        if (slots[i]!.left === slots[i - 1]!.right) return false;
+  const onSelectFromBank = (id: number) => {
+    setJuego((actual) => actual.alternarSeleccion(id));
+  };
+
+  const rotateBank = (id: number) => {
+    setJuego((actual) => actual.girarVagonEnDeposito(id));
+  };
+
+  const rotateInSlot = (pos: number) => {
+    setJuego((actual) => actual.girarVagonEnSlot(pos));
+  };
+
+  const placeSelectedIn = (pos: number) => {
+    setJuego((actual) => {
+      const resultado = actual.colocarSeleccionEn(pos);
+      if (resultado.estado === "sin-seleccion") {
+        showToast("Selecciona primero un vagón del menú.", 1200);
+        return actual;
       }
-    }
-    return true;
-  }
-
-  // Indicadores de acople
-  const coupleStatus = useMemo(() => {
-    const locoOk = slots[0] ? slots[0]!.left !== locoRight : null; // null = vacío
-    const mids: Array<boolean | null> = [null, null, null];
-    for (let i = 1; i < 4; i++) {
-      mids[i - 1] = slots[i] && slots[i - 1] ? slots[i]!.left !== slots[i - 1]!.right : null;
-    }
-    return { locoOk, mids };
-  }, [slots, locoRight]);
-
-  // ===== Acciones =====
-  function onSelectFromBank(id: number) {
-    setSelectedId((prev) => (prev === id ? null : id));
-  }
-
-  function rotateBank(id: number) {
-    setBank((b) => b.map((c) => (c.id === id ? flip(c) : c)));
-  }
-
-  function rotateInSlot(pos: number) {
-    setSlots((s) => {
-      const copy = s.slice();
-      if (!copy[pos]) return copy;
-      copy[pos] = flip(copy[pos]!);
-      return copy;
+      if (resultado.estado === "polaridad") {
+        showToast("❌ Acople inválido: deben juntarse polos opuestos (N–S).", 1600);
+        return actual;
+      }
+      return resultado.juego;
     });
-  }
+  };
 
-  function placeSelectedIn(pos: number) {
-    if (selectedId == null) {
-      showToast("Selecciona primero un vagón del menú.", 1200);
-      return;
-    }
-    const car = bank.find((c) => c.id === selectedId);
-    if (!car) return;
+  const removeFromSlot = (pos: number) => {
+    setJuego((actual) => actual.removerDeSlot(pos));
+  };
 
-    if (!polarityOkForSlot(car, pos)) {
-      showToast("❌ Acople inválido: deben juntarse polos opuestos (N–S).", 1600);
-      return;
-    }
-
-    setSlots((s) => {
-      const copy = s.slice();
-      // si ya había uno, lo devolvemos al banco
-      if (copy[pos]) setBank((b) => [...b, copy[pos]!]);
-      copy[pos] = car;
-      return copy;
-    });
-    setBank((b) => b.filter((c) => c.id !== selectedId));
-    setSelectedId(null);
-  }
-
-  function removeFromSlot(pos: number) {
-    setSlots((s) => {
-      const copy = s.slice();
-      if (!copy[pos]) return copy;
-      setBank((b) => [...b, copy[pos]!]);
-      copy[pos] = null;
-      return copy;
-    });
-  }
-
-  // Win check en cada render
-  const hasAll = useMemo(() => slots.filter(Boolean).length === 4, [slots]);
   useEffect(() => {
     if (moving || showWin || winTriggered.current) return;
-    if (hasAll && noGaps() && allCouplersOK()) {
+    if (juego.listoParaAvanzar()) {
       setMoving(true);
       setTimeout(() => setShowWin(true), 50);
       winTriggered.current = true;
       onWin?.();
     }
-  }, [hasAll, moving, showWin, onWin]);
+  }, [juego, moving, showWin, onWin]);
 
   function onReset() {
-    setBank(initialBank);
-    setSlots([null, null, null, null]);
-    setSelectedId(null);
+    setJuego(JuegoGaussMagnetico.crearInicial({ vagones: bancoInicial, capacidad: 4 }));
     setToast("");
     setMoving(false);
     setShowWin(false);
@@ -189,22 +124,22 @@ export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void 
         <div className="panel">
           <h3>Vagones</h3>
           <div className="bank" id="bank">
-            {bank.map((c) => (
+            {vagonesDisponibles.map((vagon) => (
               <div
-                key={c.id}
-                className={`car ${selectedId === c.id ? "selected" : ""}`}
-                onClick={() => onSelectFromBank(c.id)}
-                onDoubleClick={() => rotateBank(c.id)}
+                key={vagon.id}
+                className={`car ${seleccionadoId === vagon.id ? "selected" : ""}`}
+                onClick={() => onSelectFromBank(vagon.id)}
+                onDoubleClick={() => rotateBank(vagon.id)}
                 onContextMenu={(e) => {
                   e.preventDefault();
-                  rotateBank(c.id);
+                  rotateBank(vagon.id);
                 }}
-                data-left={c.left}
-                data-right={c.right}
+                data-left={vagon.poloIzquierdo}
+                data-right={vagon.poloDerecho}
               >
-                <span className={`pole ${c.left === "N" ? "n" : "s"}`}>{c.left}</span>
+                <span className={`pole ${vagon.poloIzquierdo === "N" ? "n" : "s"}`}>{vagon.poloIzquierdo}</span>
                 <span>V</span>
-                <span className={`pole ${c.right === "N" ? "n" : "s"}`}>{c.right}</span>
+                <span className={`pole ${vagon.poloDerecho === "N" ? "n" : "s"}`}>{vagon.poloDerecho}</span>
               </div>
             ))}
           </div>
@@ -221,15 +156,17 @@ export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void 
           </div>
 
           {/* Indicador entre loco y slot 0 */}
-          <div className={`couple ${coupleStatus.locoOk === null ? "" : coupleStatus.locoOk ? "ok" : "bad"}`} id="cpl-loco">
-            {coupleStatus.locoOk === null ? "•" : coupleStatus.locoOk ? "✔" : "✖"}
+          <div className={`couple ${acoples.conLocomotora === null ? "" : acoples.conLocomotora ? "ok" : "bad"}`} id="cpl-loco">
+            {acoples.conLocomotora === null ? "•" : acoples.conLocomotora ? "✔" : "✖"}
           </div>
 
           <div className="slots" id="slots">
-            {[0, 1, 2, 3].map((pos) => (
-              <div key={pos} className="flex items-center gap-2">
+            {[0, 1, 2, 3].map((pos) => {
+              const vagon = ranuras[pos];
+              return (
+                <div key={pos} className="flex items-center gap-2">
                 <div
-                  className={`slot ${slots[pos] ? "filled" : ""}`}
+                  className={`slot ${vagon ? "filled" : ""}`}
                   data-pos={pos}
                   onClick={() => placeSelectedIn(pos)}
                   onDoubleClick={() => removeFromSlot(pos)}
@@ -238,11 +175,11 @@ export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void 
                     rotateInSlot(pos);
                   }}
                 >
-                  {slots[pos] ? (
-                    <div className="car" data-left={slots[pos]!.left} data-right={slots[pos]!.right}>
-                      <span className={`pole ${slots[pos]!.left === "N" ? "n" : "s"}`}>{slots[pos]!.left}</span>
+                  {vagon ? (
+                    <div className="car" data-left={vagon.poloIzquierdo} data-right={vagon.poloDerecho}>
+                      <span className={`pole ${vagon.poloIzquierdo === "N" ? "n" : "s"}`}>{vagon.poloIzquierdo}</span>
                       <span>V</span>
-                      <span className={`pole ${slots[pos]!.right === "N" ? "n" : "s"}`}>{slots[pos]!.right}</span>
+                      <span className={`pole ${vagon.poloDerecho === "N" ? "n" : "s"}`}>{vagon.poloDerecho}</span>
                     </div>
                   ) : (
                     <>{4 - pos}</>
@@ -250,12 +187,13 @@ export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void 
                 </div>
 
                 {pos < 3 && (
-                  <div className={`couple ${coupleStatus.mids[pos] === null ? "" : coupleStatus.mids[pos] ? "ok" : "bad"}`} id={`cpl-${pos}`}>
-                    {coupleStatus.mids[pos] === null ? "•" : coupleStatus.mids[pos] ? "✔" : "✖"}
+                  <div className={`couple ${acoples.entreVagones[pos] === null ? "" : acoples.entreVagones[pos] ? "ok" : "bad"}`} id={`cpl-${pos}`}>
+                    {acoples.entreVagones[pos] === null ? "•" : acoples.entreVagones[pos] ? "✔" : "✖"}
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

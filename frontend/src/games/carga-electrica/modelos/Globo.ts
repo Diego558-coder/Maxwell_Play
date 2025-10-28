@@ -1,17 +1,8 @@
-import { BALLOON_H, BALLOON_W } from "./constants";
+import { Electron } from "./Electron";
+import type { Vector2Init } from "./Vector2";
+import { Vector2 } from "./Vector2";
 
-type Vector2Init = { x: number; y: number };
-
-type ElectronInit = {
-  angle: number;
-  radius: number;
-  speed: number;
-  size: number;
-  x: number;
-  y: number;
-};
-
-type GloboInit = {
+export type GloboInit = {
   id: number;
   color: string;
   pos: Vector2;
@@ -22,74 +13,7 @@ type GloboInit = {
   electrons: Electron[];
 };
 
-export class Vector2 {
-  public readonly x: number
-  public readonly y: number;
-
-  constructor(x = 0, y = 0) {
-    this.x = x;
-    this.y = y;
-  }
-
-  static zero(): Vector2 {
-    return new Vector2(0, 0);
-  }
-
-  static from(init: Vector2 | Vector2Init): Vector2 {
-    if (init instanceof Vector2) return init;
-    return new Vector2(init.x, init.y);
-  }
-
-  add(dx: number, dy: number): Vector2 {
-    return new Vector2(this.x + dx, this.y + dy);
-  }
-
-  scale(f: number): Vector2 {
-    return new Vector2(this.x * f, this.y * f);
-  }
-
-  clamp(minX: number, maxX: number, minY: number, maxY: number): Vector2 {
-    const x = Math.min(Math.max(this.x, minX), maxX);
-    const y = Math.min(Math.max(this.y, minY), maxY);
-    return new Vector2(x, y);
-  }
-
-  with({ x = this.x, y = this.y }: Partial<Vector2Init>): Vector2 {
-    return new Vector2(x, y);
-  }
-}
-
-export class Electron {
-  public readonly angle: number;
-  public readonly radius: number;
-  public readonly speed: number;
-  public readonly size: number;
-  public readonly x: number;
-  public readonly y: number;
-
-  constructor(angle: number, radius: number, speed: number, size: number, x: number, y: number) {
-    this.angle = angle;
-    this.radius = radius;
-    this.speed = speed;
-    this.size = size;
-    this.x = x;
-    this.y = y;
-  }
-
-  static create(init: Electron | ElectronInit): Electron {
-    if (init instanceof Electron) return init;
-    return new Electron(init.angle, init.radius, init.speed, init.size, init.x, init.y);
-  }
-
-  advance(rx: number, ry: number): Electron {
-    const nextAngle = this.angle + this.speed;
-    const centerX = BALLOON_W / 2;
-    const centerY = BALLOON_H / 2;
-    const x = centerX + Math.cos(nextAngle) * rx * this.radius;
-    const y = centerY + Math.sin(nextAngle) * ry * this.radius;
-    return new Electron(nextAngle, this.radius, this.speed, this.size, x, y);
-  }
-}
+type ElectronFactory = () => Electron[];
 
 export class Globo {
   private readonly state: GloboInit;
@@ -160,13 +84,13 @@ export class Globo {
     return this.clone({ falling });
   }
 
-  ensureElectrons(factory: () => Electron[]): Globo {
+  ensureElectrons(factory: ElectronFactory): Globo {
     if (!this.state.charged) return this;
     if (this.state.electrons.length > 0) return this;
     return this.clone({ electrons: factory() });
   }
 
-  withCharged(charged: boolean, factory?: () => Electron[]): Globo {
+  withCharged(charged: boolean, factory?: ElectronFactory): Globo {
     if (!charged) return this.clone({ charged: false, electrons: [] });
     const electrons = factory ? factory() : this.state.electrons;
     return this.clone({ charged: true, electrons: electrons.map(Electron.create) });
@@ -186,33 +110,5 @@ export class Globo {
       Electron.create(e).advance(rx, ry),
     );
     return this.clone({ electrons });
-  }
-}
-
-export class Mesa {
-  public readonly x: number;
-  public readonly y: number;
-  public readonly w: number;
-  public readonly h: number;
-
-  constructor(x: number, y: number, w: number, h: number) {
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-  }
-
-  get rect() {
-    return { x: this.x, y: this.y, w: this.w, h: this.h };
-  }
-}
-
-export class Papelito {
-  public readonly id: number;
-  public readonly rand: number;
-
-  constructor(id: number, rand: number) {
-    this.id = id;
-    this.rand = rand;
   }
 }

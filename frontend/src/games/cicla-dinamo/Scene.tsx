@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { clamp } from "./utils";
-import type { GameState } from "./types";
+import { CiclaDinamo } from "./types";
 import { FRAME, WHEEL_R, DYN, REAR_CONTACT, SNAP, START } from "./constants";
 import "./cicla.css";
 
@@ -13,14 +13,7 @@ import dynamoPng from "@/assets/dynamo.png";
 type Props = { onWin?: () => void; timeSec?: number };
 
 export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
-  const [state, setState] = useState<GameState>({
-    wheelsMounted: { front: false, rear: false },
-    dynamoOnWheel: false,
-    connections: { plus: false, minus: false },
-    pedaling: false,
-    cadence: 0,
-    power: 0,
-  });
+  const [cicla, setCicla] = useState(() => CiclaDinamo.inicial());
 
   const sceneRef = useRef<SVGSVGElement | null>(null);
 
@@ -121,13 +114,13 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
 
   // ===== Cables de dos puntas
   const setupTwoEnded = (
-    role: "plus" | "minus",
+    polaridad: "positivo" | "negativo",
     leadA: SVGCircleElement,
     leadB: SVGCircleElement,
     wire: SVGLineElement
   ) => {
-    const dynT = role === "plus" ? dynPlus.current! : dynMinus.current!;
-    const bulbT = role === "plus" ? bulbPlus.current! : bulbMinus.current!;
+    const dynT = polaridad === "positivo" ? dynPlus.current! : dynMinus.current!;
+    const bulbT = polaridad === "positivo" ? bulbPlus.current! : bulbMinus.current!;
     const start = center(dynT);
 
     leadA.setAttribute("cx", String(start.x));
@@ -135,14 +128,14 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
     wire.setAttribute("x1", String(start.x));
     wire.setAttribute("y1", String(start.y));
 
-  const off = role === "plus" ? { x: 140, y: 296 } : { x: 200, y: 308 };
-    leadB.setAttribute("cx", String(off.x));
-    leadB.setAttribute("cy", String(off.y));
-    wire.setAttribute("x2", String(off.x));
-    wire.setAttribute("y2", String(off.y));
+    const destino = polaridad === "positivo" ? { x: 140, y: 296 } : { x: 200, y: 308 };
+    leadB.setAttribute("cx", String(destino.x));
+    leadB.setAttribute("cy", String(destino.y));
+    wire.setAttribute("x2", String(destino.x));
+    wire.setAttribute("y2", String(destino.y));
 
-    const gOn = role === "plus" ? dynPlusGlow.current! : dynMinusGlow.current!;
-    const bOn = role === "plus" ? bulbPlusGlow.current! : bulbMinusGlow.current!;
+    const gOn = polaridad === "positivo" ? dynPlusGlow.current! : dynMinusGlow.current!;
+    const bOn = polaridad === "positivo" ? bulbPlusGlow.current! : bulbMinusGlow.current!;
 
     const attach = (lead: SVGCircleElement, end: "A" | "B") => {
       let dragging = false;
@@ -243,10 +236,14 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
     const mA = center(leadMinusA.current!);
     const mB = center(leadMinusB.current!);
 
-    const plus = (dist(pA, dP) < 14 && dist(pB, bP) < 14) || (dist(pB, dP) < 14 && dist(pA, bP) < 14);
-    const minus = (dist(mA, dM) < 14 && dist(mB, bM) < 14) || (dist(mB, dM) < 14 && dist(mA, bM) < 14);
+    const positivo = (dist(pA, dP) < 14 && dist(pB, bP) < 14) || (dist(pB, dP) < 14 && dist(pA, bP) < 14);
+    const negativo = (dist(mA, dM) < 14 && dist(mB, bM) < 14) || (dist(mB, dM) < 14 && dist(mA, bM) < 14);
 
-    setState((s) => ({ ...s, connections: { plus, minus } }));
+    setCicla((estado) => estado.conCables(
+      estado.cables
+        .conPositivoConectado(positivo)
+        .conNegativoConectado(negativo),
+    ));
   };
 
   // ===== pedalear
@@ -257,58 +254,60 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
       return;
     }
     let id: number | undefined;
-    if (state.pedaling) {
+    if (cicla.estaPedaleando) {
       rotFront.current?.classList.add("spin");
       rotRear.current?.classList.add("spin");
       const loop = () => {
-        setState((s) => ({
-          ...s,
-          cadence: clamp(s.cadence + 0.06, 0, 1),
-          power: clamp(s.power * 0.85 + (s.dynamoOnWheel ? 1 : 0.2) * s.cadence * 25, 0, 100),
-        }));
+        setCicla((actual) => {
+          const siguienteCadencia = clamp(actual.cadencia + 0.06, 0, 1);
+          const incrementoBase = actual.dinamo.estaApoyada ? 1 : 0.2;
+          const siguientePotencia = clamp(actual.potencia * 0.85 + incrementoBase * actual.cadencia * 25, 0, 100);
+          return actual.conMetricas(siguienteCadencia, siguientePotencia);
+        });
         id = window.setTimeout(loop, 120);
       };
       loop();
     } else {
       rotFront.current?.classList.remove("spin");
       rotRear.current?.classList.remove("spin");
-      const cool = () => {
-        setState((s) => ({
-          ...s,
-          cadence: clamp(s.cadence - 0.08, 0, 1),
-          power: clamp(s.power - 4, 0, 100),
-        }));
-        if (id) window.setTimeout(cool, 120);
+      const enfriar = () => {
+        setCicla((actual) => {
+          const siguienteCadencia = clamp(actual.cadencia - 0.08, 0, 1);
+          const siguientePotencia = clamp(actual.potencia - 4, 0, 100);
+          return actual.conMetricas(siguienteCadencia, siguientePotencia);
+        });
+        if (id) window.setTimeout(enfriar, 120);
       };
-      cool();
+      enfriar();
     }
     return () => { if (id) window.clearTimeout(id); };
-  }, [state.pedaling, winAchieved]);
+  }, [cicla.estaPedaleando, cicla.dinamo.estaApoyada, winAchieved]);
 
   // medidor / bombillo / hints
-  const step1 = state.wheelsMounted.front && state.wheelsMounted.rear;
-  const step2 = step1 && state.dynamoOnWheel;
-  const step3 = step2 && state.connections.plus && state.connections.minus;
-  const ready = step3;
+  const paso1 = cicla.ruedas.estanMontadas;
+  const paso2 = paso1 && cicla.dinamo.estaApoyada;
+  const paso3 = paso2 && cicla.cables.estanCompletos;
+  const listoParaPedalear = paso3;
 
   useEffect(() => {
-    if (fill.current) fill.current.style.width = `${state.power | 0}%`;
-    if (pct.current) pct.current.textContent = `${state.power | 0}%`;
-    const ok = state.power >= 100 && ready;
-    bulbGlass.current?.classList.toggle("bulb-lit", ok);
+    if (fill.current) fill.current.style.width = `${cicla.potencia | 0}%`;
+    if (pct.current) pct.current.textContent = `${cicla.potencia | 0}%`;
+    const bombilloEncendido = cicla.bombillo.estaEncendido;
+    const iluminado = bombilloEncendido && listoParaPedalear;
+    bulbGlass.current?.classList.toggle("bulb-lit", iluminado);
 
-    if (!step1) setHint("Encaja las dos ruedas en los ejes verdes.");
-    else if (!state.dynamoOnWheel) setHint("Apoya la dínamo: su rodillo debe tocar la rueda trasera (izquierda).");
-    else if (!step3) setHint("Conecta cables: rojo al + y negro al – (en la dínamo y el bombillo).");
-    else if (state.power >= 100) setHint("¡Excelente! Llegaste al 100%. Espera un momento.");
+    if (!paso1) setHint("Encaja las dos ruedas en los ejes verdes.");
+    else if (!cicla.dinamo.estaApoyada) setHint("Apoya la dínamo: su rodillo debe tocar la rueda trasera (izquierda).");
+    else if (!paso3) setHint("Conecta cables: rojo al + y negro al – (en la dínamo y el bombillo).");
+    else if (bombilloEncendido) setHint("¡Excelente! Llegaste al 100%. Espera un momento.");
     else setHint("¡Listo! Pedalea hasta que la potencia llegue a 100%.");
-  }, [state, ready, step1, step3]);
+  }, [cicla, listoParaPedalear, paso1, paso3]);
 
   useEffect(() => {
-    if (winAchieved || !ready || state.power < 100) return;
+    if (winAchieved || !listoParaPedalear || cicla.potencia < 100) return;
     setWinAchieved(true);
-    setState((s) => (s.pedaling ? { ...s, pedaling: false } : s));
-  }, [ready, state.power, winAchieved]);
+    setCicla((actual) => actual.detenerPedaleo());
+  }, [listoParaPedalear, cicla.potencia, winAchieved]);
 
   // Disparar onWin cuando se alcanza el 100%
   useEffect(() => {
@@ -328,7 +327,7 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
         const t = center(axleFront.current!);
         if (dist(c, t) < SNAP) {
           gFront.current!.setAttribute("transform", `translate(${t.x},${t.y})`);
-          setState((v) => ({ ...v, wheelsMounted: { ...v.wheelsMounted, front: true } }));
+          setCicla((estado) => estado.conRuedas(estado.ruedas.conDelanteraMontada(true)));
         }
       }
     ) : undefined;
@@ -342,7 +341,7 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
         const t = center(axleRear.current!);
         if (dist(c, t) < SNAP) {
           gRear.current!.setAttribute("transform", `translate(${t.x},${t.y})`);
-          setState((v) => ({ ...v, wheelsMounted: { ...v.wheelsMounted, rear: true } }));
+          setCicla((estado) => estado.conRuedas(estado.ruedas.conTraseraMontada(true)));
         }
       }
     ) : undefined;
@@ -362,15 +361,15 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
           gDyn.current!.setAttribute("transform", `translate(${bx + dx},${by + dy})`);
           bringToFront(gDyn.current);
           bringToFront(sceneRef.current!.querySelector("#wires"));
-          setState((v) => ({ ...v, dynamoOnWheel: true }));
+          setCicla((estado) => estado.conDinamo(estado.dinamo.conApoyo(true)));
         }
       }
     ) : undefined;
 
     const cp = (leadPlusA.current && leadPlusB.current && wirePlus.current)
-      ? setupTwoEnded("plus", leadPlusA.current, leadPlusB.current, wirePlus.current) : undefined;
+      ? setupTwoEnded("positivo", leadPlusA.current, leadPlusB.current, wirePlus.current) : undefined;
     const cm = (leadMinusA.current && leadMinusB.current && wireMinus.current)
-      ? setupTwoEnded("minus", leadMinusA.current, leadMinusB.current, wireMinus.current) : undefined;
+      ? setupTwoEnded("negativo", leadMinusA.current, leadMinusB.current, wireMinus.current) : undefined;
 
     return () => { cleanFront?.(); cleanRear?.(); cleanDyn?.(); cp?.(); cm?.(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -379,14 +378,7 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
   // reset (usa START)
   const reset = () => {
     setWinAchieved(false);
-    setState({
-      wheelsMounted: { front: false, rear: false },
-      dynamoOnWheel: false,
-      connections: { plus: false, minus: false },
-      pedaling: false,
-      cadence: 0,
-      power: 0,
-    });
+    setCicla(() => CiclaDinamo.inicial());
 
     gFront.current?.setAttribute("transform", `translate(${START.wheelFront.x},${START.wheelFront.y})`);
     gRear.current?.setAttribute("transform", `translate(${START.wheelRear.x},${START.wheelRear.y})`);
@@ -417,7 +409,10 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
     }
   };
 
-  const pedalToggle = () => step3 && !winAchieved && setState((s) => ({ ...s, pedaling: !s.pedaling }));
+  const pedalToggle = () => {
+    if (!paso3 || winAchieved) return;
+    setCicla((actual) => actual.alternarPedaleo());
+  };
   const show = (msg: string, ms = 3500) => { setToast(msg); setTimeout(() => setToast(null), ms); };
 
   // Bloquear scroll del body mientras el juego está activo
@@ -441,17 +436,17 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
       </div>
 
       {/* HUD izquierda */}
-  <div className="fixed left-3 top-20 w-[300px] bg-white/10 text-white rounded-2xl p-3 backdrop-blur-md z-30">
-        <div className={`step ${state.wheelsMounted.front && state.wheelsMounted.rear ? "done" : "active"}`}>
+      <div className="fixed left-3 top-20 w-[300px] bg-white/10 text-white rounded-2xl p-3 backdrop-blur-md z-30">
+        <div className={`step ${cicla.ruedas.estanMontadas ? "done" : "active"}`}>
           <span className="dot" /> 1 Encaja <b>ruedas</b>
         </div>
-        <div className={`step ${state.dynamoOnWheel ? "done" : (state.wheelsMounted.front && state.wheelsMounted.rear) ? "active" : ""}`}>
+        <div className={`step ${cicla.dinamo.estaApoyada ? "done" : cicla.ruedas.estanMontadas ? "active" : ""}`}>
           <span className="dot" /> 2) Apoya <b>dínamo</b>
         </div>
-        <div className={`step ${(state.connections.plus && state.connections.minus) ? "done" : state.dynamoOnWheel ? "active" : ""}`}>
+        <div className={`step ${cicla.cables.estanCompletos ? "done" : cicla.dinamo.estaApoyada ? "active" : ""}`}>
           <span className="dot" /> 3) Conecta <b>cables</b>
         </div>
-        <div className={`step ${(state.connections.plus && state.connections.minus) ? (state.power >= 100 ? "done" : "active") : ""}`}>
+        <div className={`step ${cicla.cables.estanCompletos ? (cicla.bombillo.estaEncendido ? "done" : "active") : ""}`}>
           <span className="dot" /> 4) <b>Pedalea</b>
         </div>
         <div className="text-sm opacity-90 mt-2">{hint}</div>
@@ -548,8 +543,8 @@ export default function GameCiclaDinamoScene({ onWin, timeSec = 0 }: Props) {
 
       {/* Controles */}
       <div className="fixed left-1/2 -translate-x-1/2 bottom-3 flex gap-2 bg-white/10 backdrop-blur-md p-2 rounded-xl z-40">
-        <button className={`px-4 py-2 rounded-lg font-bold text-white ${ready ? "bg-emerald-600" : "bg-emerald-600/40 cursor-not-allowed"}`} onClick={pedalToggle} disabled={!ready}>
-          {state.pedaling ? "⏹️ Parar" : "🚴 Pedalear"}
+        <button className={`px-4 py-2 rounded-lg font-bold text-white ${listoParaPedalear ? "bg-emerald-600" : "bg-emerald-600/40 cursor-not-allowed"}`} onClick={pedalToggle} disabled={!listoParaPedalear}>
+          {cicla.estaPedaleando ? "⏹️ Parar" : "🚴 Pedalear"}
         </button>
         <button className="px-4 py-2 rounded-lg font-bold text-white bg-rose-600" onClick={reset}>🔄 Reiniciar</button>
         <button className="px-4 py-2 rounded-lg font-bold text-white bg-amber-500" onClick={() => show("Encaja ruedas → dínamo → cables → pedalea.")}>📖 Ayuda</button>

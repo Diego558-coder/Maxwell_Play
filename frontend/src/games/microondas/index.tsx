@@ -1,46 +1,26 @@
-// src/games/microondas/index.tsx
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./styles.css";
+import { Microondas, IDS } from "./modelos/Microondas";
+import type { IdComponenteMicroondas } from "./modelos/Microondas";
+import type { ComponenteMicroondas } from "./modelos/ComponenteMicroondas";
+import type { ZonaColocacion } from "./modelos/ZonaColocacion";
 
-type GameState = {
-  magnetronPlaced: boolean;
-  powerSourcePlaced: boolean;
-  metalCavityPlaced: boolean;
-  doorPlaced: boolean;
-  foodPlatePlaced: boolean;
-  isRunning: boolean;
-  assemblyComplete: boolean;
-  timeLeft: number;
-};
+type DragCtx = { id: IdComponenteMicroondas; offsetX: number; offsetY: number } | null;
 
-type DragCtx = { id: string; offsetX: number; offsetY: number } | null;
+const COOK_SECONDS = 7;
 
-const IDS = {
-  magnetron: "magnetron",
-  power: "powerSource",
-  cavity: "metalCavity",
-  door: "doorComponent",
-  plate: "foodPlate",
-} as const;
+type SceneProps = { onWin?: () => void };
 
-const allowedZoneByComponent: Record<string, string> = {
-  [IDS.magnetron]: "magnetronZone",
-  [IDS.power]: "powerZone",
-  [IDS.cavity]: "cavityZone",
-  [IDS.door]: "doorZone",
-  [IDS.plate]: "plateZone",
-};
-
-export default function GameAmpereMaxwellScene({ onWin }: { onWin?: () => void }) {
-  const COOK_SECONDS = 7;
+export default function GameAmpereMaxwellScene({ onWin }: SceneProps) {
+  const [juego, setJuego] = useState(() => Microondas.crearInicial(COOK_SECONDS));
+  const juegoRef = useRef(juego);
   const exitoNotificado = useRef(false);
+
   const frameRef = useRef<HTMLDivElement | null>(null);
   const interiorRef = useRef<HTMLDivElement | null>(null);
+  const foodRef = useRef<HTMLDivElement | null>(null);
   const wavesRef = useRef<HTMLDivElement | null>(null);
   const feedbackRef = useRef<HTMLDivElement | null>(null);
-  const displayRef = useRef<HTMLDivElement | null>(null);
-  const progressFillRef = useRef<HTMLDivElement | null>(null);
-  const progressTextRef = useRef<HTMLDivElement | null>(null);
 
   const dragEl = useRef<HTMLDivElement | null>(null);
   const dragCtx = useRef<DragCtx>(null);
@@ -50,48 +30,31 @@ export default function GameAmpereMaxwellScene({ onWin }: { onWin?: () => void }
   const clockTimer = useRef<number | null>(null);
   const feedbackTimer = useRef<number | null>(null);
 
-  const [gs, setGs] = useState<GameState>({
-    magnetronPlaced: false,
-    powerSourcePlaced: false,
-    metalCavityPlaced: false,
-    doorPlaced: false,
-    foodPlatePlaced: false,
-    isRunning: false,
-    assemblyComplete: false,
-    timeLeft: COOK_SECONDS,
-  });
-
-  // zonas relativas al frame
-  const zones = useMemo(
-    () => ({
-      magnetron: { top: 28, left: 28, width: 56, height: 28 },
-      power:     { top: 160, left: 80, width: 100, height: 30 },
-      cavity:    { top: 24,  left: 24, width: 150, height: 130 },
-      door:      { top: 24,  left: 24, width: 150, height: 130 },
-      plate:     { top: 89,  left: 99, width: 90,  height: 90, round: true, center: true },
-    }),
-    []
-  );
+  useEffect(() => {
+    juegoRef.current = juego;
+  }, [juego]);
 
   const hideFeedback = useCallback(() => {
     if (feedbackTimer.current) {
       clearTimeout(feedbackTimer.current);
       feedbackTimer.current = null;
     }
-    if (!feedbackRef.current) return;
-    feedbackRef.current.style.display = "none";
-    feedbackRef.current.innerHTML = "";
+    const feedback = feedbackRef.current;
+    if (!feedback) return;
+    feedback.style.display = "none";
+    feedback.innerHTML = "";
   }, []);
 
   const showFeedback = useCallback((html: string, opts: { duration?: number } = {}) => {
-    if (!feedbackRef.current) return;
+    const feedback = feedbackRef.current;
+    if (!feedback) return;
     const duration = opts.duration ?? 2000;
     if (feedbackTimer.current) {
       clearTimeout(feedbackTimer.current);
       feedbackTimer.current = null;
     }
-    feedbackRef.current.innerHTML = html;
-    feedbackRef.current.style.display = "block";
+    feedback.innerHTML = html;
+    feedback.style.display = "block";
     if (duration > 0) {
       feedbackTimer.current = window.setTimeout(() => {
         feedbackTimer.current = null;
@@ -100,21 +63,27 @@ export default function GameAmpereMaxwellScene({ onWin }: { onWin?: () => void }
     }
   }, [hideFeedback]);
 
-  const updateProgress = (s: GameState) => {
-    const done = [s.magnetronPlaced, s.powerSourcePlaced, s.metalCavityPlaced, s.doorPlaced, s.foodPlatePlaced].filter(Boolean).length;
-    if (progressFillRef.current) progressFillRef.current.style.width = `${(done / 5) * 100}%`;
-    if (progressTextRef.current) progressTextRef.current.textContent = `${done}/5 componentes`;
-  };
+  const toast = useCallback((msg: string) => {
+    showFeedback(`<h3>${msg}</h3>`);
+  }, [showFeedback]);
 
-  const startDrag = (el: HTMLDivElement, id: string, x: number, y: number) => {
-    const r = el.getBoundingClientRect();
+  const moveDrag = useCallback((x: number, y: number) => {
+    if (!dragEl.current || !dragCtx.current) return;
+    dragEl.current.style.left = `${x - dragCtx.current.offsetX}px`;
+    dragEl.current.style.top = `${y - dragCtx.current.offsetY}px`;
+  }, []);
+
+  const startDrag = useCallback((el: HTMLDivElement, id: IdComponenteMicroondas, x: number, y: number) => {
+    if (juegoRef.current.estaComponenteColocado(id)) return;
+
+    const rect = el.getBoundingClientRect();
     const clone = el.cloneNode(true) as HTMLDivElement;
     clone.classList.add("dragging");
-    clone.style.width = `${r.width}px`;
-    clone.style.height = `${r.height}px`;
+    clone.style.width = `${rect.width}px`;
+    clone.style.height = `${rect.height}px`;
     clone.style.position = "fixed";
-    clone.style.left = `${r.left}px`;
-    clone.style.top = `${r.top}px`;
+    clone.style.left = `${rect.left}px`;
+    clone.style.top = `${rect.top}px`;
     clone.style.zIndex = "2000";
     clone.style.pointerEvents = "none";
     document.body.appendChild(clone);
@@ -123,251 +92,266 @@ export default function GameAmpereMaxwellScene({ onWin }: { onWin?: () => void }
     el.style.pointerEvents = "none";
 
     dragEl.current = clone;
-    dragCtx.current = { id, offsetX: x - r.left, offsetY: y - r.top };
+    dragCtx.current = { id, offsetX: x - rect.left, offsetY: y - rect.top };
     moveDrag(x, y);
 
-    frameRef.current?.querySelectorAll<HTMLDivElement>(".drop-zone:not(.filled)").forEach((z) => z.classList.add("drag-over"));
-  };
-
-  const moveDrag = (x: number, y: number) => {
-    if (!dragEl.current || !dragCtx.current) return;
-    dragEl.current.style.left = `${x - dragCtx.current.offsetX}px`;
-    dragEl.current.style.top  = `${y - dragCtx.current.offsetY}px`;
-  };
-
-  const endDrag = (x: number, y: number) => {
-    const el = dragEl.current;
-    const ctx = dragCtx.current;
-    dragEl.current = null; dragCtx.current = null;
-    if (!el || !ctx) return;
-
-    frameRef.current?.querySelectorAll<HTMLDivElement>(".drop-zone").forEach((z) => z.classList.remove("drag-over"));
-
-    let zone = getDropZoneAt(ctx.id, x, y);
-    if (!zone && ctx.id === IDS.plate) {
-      const plateZone = frameRef.current?.querySelector<HTMLDivElement>("#plateZone") ?? null;
-      if (plateZone) {
-        const r = plateZone.getBoundingClientRect();
-        if (x >= r.left - 20 && x <= r.right + 20 && y >= r.top - 20 && y <= r.bottom + 20 && !plateZone.classList.contains("filled")) {
-          zone = plateZone;
-        }
+    const zonaId = juegoRef.current.zonaObjetivoPara(id);
+    if (zonaId) {
+      const zonaEl = document.getElementById(zonaId) as HTMLDivElement | null;
+      if (zonaEl && !zonaEl.classList.contains("filled")) {
+        zonaEl.classList.add("drag-over");
       }
     }
-    if (!zone) { // cancelar
-      if (el.parentElement === document.body) el.remove();
-      const orig = document.getElementById(ctx.id) as HTMLDivElement | null;
-      if (orig) { orig.removeAttribute("data-dragging"); orig.style.pointerEvents = ""; }
+  }, [moveDrag]);
+
+  const getDropZoneAt = useCallback((componentId: IdComponenteMicroondas, x: number, y: number) => {
+    const zonaId = juegoRef.current.zonaObjetivoPara(componentId);
+    if (!zonaId) return null;
+    const zoneEl = document.getElementById(zonaId) as HTMLDivElement | null;
+    if (!zoneEl) return null;
+
+    const zonaModelo = juegoRef.current.zonaPorId(zonaId);
+    if (zonaModelo?.ocupada) return null;
+
+    const rect = zoneEl.getBoundingClientRect();
+    const tolerancia = zonaModelo?.toleranciaExtra ?? 0;
+    const dentro =
+      x >= rect.left - tolerancia &&
+      x <= rect.right + tolerancia &&
+      y >= rect.top - tolerancia &&
+      y <= rect.bottom + tolerancia;
+    return dentro ? zoneEl : null;
+  }, []);
+
+  const placeComponent = useCallback((id: IdComponenteMicroondas, zoneEl: HTMLDivElement) => {
+    const resultado = juegoRef.current.intentarColocarComponente(id, zoneEl.id);
+    if (!resultado.exito) {
+      if (resultado.mensaje) showFeedback(`<h3>${resultado.mensaje}</h3>`);
+      return false;
+    }
+
+    setJuego(resultado.juego);
+    if (resultado.mensaje) toast(resultado.mensaje);
+    return true;
+  }, [showFeedback, toast]);
+
+  const endDrag = useCallback((x: number, y: number) => {
+    const ctx = dragCtx.current;
+    const clone = dragEl.current;
+    dragCtx.current = null;
+    dragEl.current = null;
+
+    document.querySelectorAll<HTMLDivElement>(".drop-zone").forEach((z) => z.classList.remove("drag-over"));
+
+    if (!ctx || !clone) return;
+
+    const zone = getDropZoneAt(ctx.id, x, y);
+    if (!zone) {
+      clone.remove();
+      const original = document.getElementById(ctx.id) as HTMLDivElement | null;
+      if (original) {
+        original.removeAttribute("data-dragging");
+        original.style.pointerEvents = "";
+      }
       return;
     }
 
-    const ok =
-      (ctx.id === IDS.magnetron && zone.id === "magnetronZone") ||
-      (ctx.id === IDS.power     && zone.id === "powerZone")     ||
-      (ctx.id === IDS.cavity    && zone.id === "cavityZone")    ||
-      (ctx.id === IDS.door      && zone.id === "doorZone")      ||
-      (ctx.id === IDS.plate     && zone.id === "plateZone");
-
-    if (!ok) {
-      if (el.parentElement === document.body) el.remove();
-      const orig = document.getElementById(ctx.id) as HTMLDivElement | null;
-      if (orig) { orig.removeAttribute("data-dragging"); orig.style.pointerEvents = ""; }
-  showFeedback(`<h3>❌ Componente incorrecto para esta posición</h3>`);
+    const colocado = placeComponent(ctx.id, zone);
+    if (!colocado) {
+      clone.remove();
+      const original = document.getElementById(ctx.id) as HTMLDivElement | null;
+      if (original) {
+        original.removeAttribute("data-dragging");
+        original.style.pointerEvents = "";
+      }
       return;
     }
 
-    const placed = placeComponent(ctx.id, zone);
-    if (!placed) {
-      if (el.parentElement === document.body) el.remove();
-      const orig = document.getElementById(ctx.id) as HTMLDivElement | null;
-      if (orig) { orig.removeAttribute("data-dragging"); orig.style.pointerEvents = ""; }
-      return;
+    const original = document.getElementById(ctx.id) as HTMLDivElement | null;
+    if (original) {
+      original.removeAttribute("data-dragging");
+      original.style.pointerEvents = "";
+      original.style.display = "none";
     }
-
-    const orig = document.getElementById(ctx.id) as HTMLDivElement | null;
-    if (orig) { orig.removeAttribute("data-dragging"); orig.style.pointerEvents = ""; orig.style.display = "none"; }
-    if (el.parentElement === document.body) el.remove();
-  };
+    clone.remove();
+  }, [getDropZoneAt, placeComponent]);
 
   const endDragRef = useRef<(x: number, y: number) => void>(() => {});
   endDragRef.current = endDrag;
 
-  const getDropZoneAt = (componentId: string, x: number, y: number) => {
-    const zonesEls = frameRef.current?.querySelectorAll<HTMLDivElement>(".drop-zone") ?? [];
-    const allowed = allowedZoneByComponent[componentId];
-    for (const z of zonesEls) {
-      if (allowed && z.id !== allowed) continue;
-      const r = z.getBoundingClientRect();
-      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom && !z.classList.contains("filled")) return z;
-    }
-    return null;
-  };
-
-  const placeComponent = (id: string, zoneEl: HTMLDivElement) => {
-    if (id === IDS.door) {
-      const s = gs;
-      if (!(s.magnetronPlaced && s.powerSourcePlaced && s.metalCavityPlaced && s.foodPlatePlaced)) {
-  showFeedback(`<h3>❌ La puerta debe instalarse al final, después de los demás componentes.</h3>`);
-        return false;
-      }
+  const stopAll = useCallback(() => {
+    const waves = wavesRef.current;
+    if (waves) {
+      waves.classList.remove("visible");
+      waves.innerHTML = "";
     }
 
-    zoneEl.classList.add("filled");
-    zoneEl.textContent = "";
-    setGs((s) => {
-      const n = { ...s };
-      if (id === IDS.magnetron) { toast("✅ Magnetrón instalado"); n.magnetronPlaced = true; }
-      if (id === IDS.power)     { toast("✅ Fuente de energía conectada"); n.powerSourcePlaced = true; }
-      if (id === IDS.cavity)    { n.metalCavityPlaced = true; interiorRef.current?.classList.add("has-cavity"); if (interiorRef.current) interiorRef.current.textContent = ""; toast("✅ Cavidad metálica instalada"); }
-      if (id === IDS.door)      { toast("✅ Puerta del horno montada"); n.doorPlaced = true; }
-      if (id === IDS.plate)     { n.foodPlatePlaced = true; showFood(); toast("✅ Pollo colocado en el microondas"); }
-
-      n.assemblyComplete = n.magnetronPlaced && n.powerSourcePlaced && n.metalCavityPlaced && n.doorPlaced && n.foodPlatePlaced;
-      return n;
-    });
-    return true;
-  };
-
-  const toast = (msg: string) => showFeedback(`<h3>${msg}</h3>`);
-
-  const showFood = () => {
-    const interior = interiorRef.current; if (!interior) return;
-    const food = document.createElement("div");
-    food.className = "food-heating visible";
-    food.id = "foodHeating";
-    food.textContent = "🍗 Pollo";
-    interior.appendChild(food);
-  };
-
-  const togglePower = () => {
-    if (!gs.assemblyComplete) {
-  showFeedback(`<h3>❌ Primero ensambla todos los componentes.</h3>`);
-      return;
-    }
-    setGs((s) => ({ ...s, isRunning: !s.isRunning, timeLeft: s.isRunning ? s.timeLeft : COOK_SECONDS }));
-  };
-
-  // reloj / animaciones
-  useEffect(() => {
-    if (displayRef.current) {
-      const secondsToShow = gs.timeLeft;
-      const m = String(Math.floor(secondsToShow / 60)).padStart(2, "0");
-      const sec = String(secondsToShow % 60).padStart(2, "0");
-      displayRef.current.textContent = `${m}:${sec}`;
+    if (foodRef.current) {
+      foodRef.current.classList.remove("hot");
+      foodRef.current.querySelectorAll(".steam").forEach((s) => s.remove());
     }
 
-    if (gs.isRunning) {
-      wavesRef.current?.classList.add("visible");
-
-      const interior = interiorRef.current;
-      if (interior) {
-        interior.querySelector("#foodHeating")?.classList.add("hot");
-        const rect = interior.getBoundingClientRect();
-        if (waveTimer.current) clearInterval(waveTimer.current);
-        waveTimer.current = window.setInterval(() => {
-          if (!wavesRef.current) return;
-          for (let i = 0; i < 12; i++) {
-            const w = document.createElement("div");
-            w.className = "wave";
-            const x = Math.random() * (rect.width - 20) + rect.left;
-            const y = Math.random() * (rect.height - 20) + rect.top;
-            w.style.left = `${x}px`;
-            w.style.top  = `${y}px`;
-            w.style.animationDelay = `${i * 0.1}s`;
-            const colors = ["#e74c3c", "#f39c12", "#e67e22", "#d35400"];
-            w.style.background = colors[Math.floor(Math.random() * colors.length)];
-            wavesRef.current.appendChild(w);
-            setTimeout(() => w.remove(), 2000);
-          }
-        }, 200);
-      }
-
-      if (steamTimer.current) clearInterval(steamTimer.current);
-      steamTimer.current = window.setInterval(() => {
-        const food = document.getElementById("foodHeating"); if (!food) return;
-        const s = document.createElement("div");
-        s.className = "steam";
-        s.style.left = `${Math.random() * 80 + 10}px`;
-        s.style.bottom = "80px";
-        s.style.animationDelay = `${Math.random()}s`;
-        food.appendChild(s);
-        setTimeout(() => s.remove(), 2000);
-      }, 400);
-
-      if (clockTimer.current) clearInterval(clockTimer.current);
-      clockTimer.current = window.setInterval(() => {
-        setGs((s) => {
-          if (s.timeLeft <= 1) {
-            clearInterval(clockTimer.current!);
-            stopAll();
-            showFeedback(`<h3>🍗 ¡Pollo listo! El microondas ha terminado.</h3>`, { duration: 2600 });
-            if (!exitoNotificado.current) { exitoNotificado.current = true; onWin?.(); }
-            return { ...s, isRunning: false, timeLeft: 0 };
-          }
-          return { ...s, timeLeft: s.timeLeft - 1 };
-        });
-      }, 1000);
-    } else {
-      stopAll();
+    if (waveTimer.current) {
+      clearInterval(waveTimer.current);
+      waveTimer.current = null;
     }
-
-    return () => { if (clockTimer.current) clearInterval(clockTimer.current); stopAll(); };
-  }, [gs.isRunning, gs.timeLeft, onWin, showFeedback]);
-
-  const stopAll = () => {
-    if (wavesRef.current) { wavesRef.current.classList.remove("visible"); wavesRef.current.innerHTML = ""; }
-    document.getElementById("foodHeating")?.classList.remove("hot");
-    document.getElementById("foodHeating")?.querySelectorAll(".steam").forEach((s) => s.remove());
-    if (waveTimer.current) clearInterval(waveTimer.current);
-    if (steamTimer.current) clearInterval(steamTimer.current);
-  };
-
-  const reset = () => {
-    exitoNotificado.current = false;
-    stopAll();
-    setGs({
-      magnetronPlaced: false, powerSourcePlaced: false, metalCavityPlaced: false,
-      doorPlaced: false, foodPlatePlaced: false, isRunning: false, assemblyComplete: false, timeLeft: COOK_SECONDS,
-    });
-    frameRef.current?.querySelectorAll<HTMLDivElement>(".drop-zone").forEach((z) => {
-      z.classList.remove("filled"); z.textContent = z.dataset.label ?? "";
-    });
-    interiorRef.current?.classList.remove("has-cavity");
-    if (interiorRef.current) interiorRef.current.textContent = "Cavidad Interior";
-    document.querySelectorAll<HTMLDivElement>(".component").forEach((c) => (c.style.display = ""));
-    hideFeedback();
-    updateProgress({
-      magnetronPlaced: false, powerSourcePlaced: false, metalCavityPlaced: false,
-      doorPlaced: false, foodPlatePlaced: false, isRunning: false, assemblyComplete: false, timeLeft: COOK_SECONDS,
-    });
-  };
-
-  useEffect(() => { updateProgress(gs); }, [gs]);
+    if (steamTimer.current) {
+      clearInterval(steamTimer.current);
+      steamTimer.current = null;
+    }
+  }, []);
 
   useEffect(() => {
-    const onMove = (e: MouseEvent) => moveDrag(e.clientX, e.clientY);
-    const onUp   = (e: MouseEvent) => endDragRef.current(e.clientX, e.clientY);
-    const onTouchMove = (e: TouchEvent) => {
-      if (!dragEl.current) return; e.preventDefault();
-      moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+    const onMove = (event: MouseEvent) => moveDrag(event.clientX, event.clientY);
+    const onUp = (event: MouseEvent) => endDragRef.current(event.clientX, event.clientY);
+    const onTouchMove = (event: TouchEvent) => {
+      if (!dragEl.current) return;
+      event.preventDefault();
+      const touch = event.touches[0];
+      moveDrag(touch.clientX, touch.clientY);
     };
-    const onTouchEnd = (e: TouchEvent) => {
-      const t = e.changedTouches[0]; endDragRef.current(t.clientX, t.clientY);
+    const onTouchEnd = (event: TouchEvent) => {
+      const touch = event.changedTouches[0];
+      endDragRef.current(touch.clientX, touch.clientY);
     };
+
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend", onTouchEnd);
+
     return () => {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("touchend", onTouchEnd);
     };
-  }, []);
+  }, [moveDrag]);
+
+  useEffect(() => {
+    if (clockTimer.current) {
+      clearInterval(clockTimer.current);
+      clockTimer.current = null;
+    }
+
+    if (!juego.estaEncendido) {
+      stopAll();
+      return;
+    }
+
+    const waves = wavesRef.current;
+    if (waves) {
+      waves.classList.add("visible");
+    }
+
+    if (interiorRef.current && foodRef.current) {
+      foodRef.current.classList.add("hot");
+    }
+
+    const frameRect = interiorRef.current?.getBoundingClientRect();
+    if (frameRect) {
+      if (waveTimer.current) clearInterval(waveTimer.current);
+      waveTimer.current = window.setInterval(() => {
+        const wavesContainer = wavesRef.current;
+        if (!wavesContainer) return;
+        for (let i = 0; i < 12; i++) {
+          const wave = document.createElement("div");
+          wave.className = "wave";
+          const x = Math.random() * (frameRect.width - 20) + frameRect.left;
+          const y = Math.random() * (frameRect.height - 20) + frameRect.top;
+          wave.style.left = `${x}px`;
+          wave.style.top = `${y}px`;
+          wave.style.animationDelay = `${i * 0.1}s`;
+          const colors = ["#e74c3c", "#f39c12", "#e67e22", "#d35400"];
+          wave.style.background = colors[Math.floor(Math.random() * colors.length)];
+          wavesContainer.appendChild(wave);
+          window.setTimeout(() => wave.remove(), 2000);
+        }
+      }, 200);
+    }
+
+    if (steamTimer.current) clearInterval(steamTimer.current);
+    steamTimer.current = window.setInterval(() => {
+      const food = foodRef.current;
+      if (!food) return;
+      const steam = document.createElement("div");
+      steam.className = "steam";
+      steam.style.left = `${Math.random() * 80 + 10}px`;
+      steam.style.bottom = "80px";
+      steam.style.animationDelay = `${Math.random()}s`;
+      food.appendChild(steam);
+      window.setTimeout(() => steam.remove(), 2000);
+    }, 400);
+
+    clockTimer.current = window.setInterval(() => {
+      setJuego((estado) => {
+        if (!estado.estaEncendido) return estado;
+        if (estado.tiempoRestante <= 1) {
+          stopAll();
+          showFeedback(`<h3>🍗 ¡Pollo listo! El microondas ha terminado.</h3>`, { duration: 2600 });
+          if (!exitoNotificado.current) {
+            exitoNotificado.current = true;
+            onWin?.();
+          }
+          return estado.avanzarSegundo();
+        }
+        return estado.avanzarSegundo();
+      });
+    }, 1000);
+
+    return () => {
+      if (clockTimer.current) {
+        clearInterval(clockTimer.current);
+        clockTimer.current = null;
+      }
+      stopAll();
+    };
+  }, [juego.estaEncendido, onWin, showFeedback, stopAll]);
+
+  const togglePower = () => {
+    if (!juegoRef.current.ensambladoCompleto) {
+      showFeedback(`<h3>❌ Primero ensambla todos los componentes.</h3>`);
+      return;
+    }
+    setJuego((estado) => estado.alternarEncendido());
+  };
+
+  const reset = () => {
+    exitoNotificado.current = false;
+    stopAll();
+    if (clockTimer.current) {
+      clearInterval(clockTimer.current);
+      clockTimer.current = null;
+    }
+    hideFeedback();
+    document.querySelectorAll<HTMLDivElement>('.component[data-dragging="true"]').forEach((c) => {
+      c.removeAttribute("data-dragging");
+      c.style.pointerEvents = "";
+      c.style.display = "";
+    });
+    document.querySelectorAll<HTMLDivElement>(".drop-zone").forEach((z) => z.classList.remove("drag-over"));
+    if (dragEl.current) {
+      dragEl.current.remove();
+      dragEl.current = null;
+    }
+    dragCtx.current = null;
+    const nuevo = Microondas.crearInicial(COOK_SECONDS);
+    juegoRef.current = nuevo;
+    setJuego(nuevo);
+  };
+
+  const progreso = juego.componentesInstalados();
+  const totalComponentes = juego.totalComponentes();
+  const porcentaje = useMemo(() => juego.porcentajeProgreso(), [juego]);
+
+  const tiempoPantalla = useMemo(() => {
+    const minutos = String(Math.floor(juego.tiempoRestante / 60)).padStart(2, "0");
+    const segundos = String(juego.tiempoRestante % 60).padStart(2, "0");
+    return `${minutos}:${segundos}`;
+  }, [juego.tiempoRestante]);
 
   return (
     <div className="mw-game-container">
-      {/* aviso superior e indicador de progreso */}
       <div className="mw-instruction">
         Ensambla el microondas arrastrando cada componente a su lugar y luego enciéndelo.
       </div>
@@ -375,57 +359,76 @@ export default function GameAmpereMaxwellScene({ onWin }: { onWin?: () => void }
       <div className="mw-progress">
         <div>🔧 Progreso de Ensamblaje</div>
         <div className="mw-bar">
-          <div className="mw-bar-fill" ref={progressFillRef} />
+          <div className="mw-bar-fill" style={{ width: `${porcentaje}%` }} />
         </div>
-        <div ref={progressTextRef}>0/5 componentes</div>
+        <div>{progreso}/{totalComponentes} componentes</div>
       </div>
 
-      {/* Zona central sin scroll */}
       <div className="mw-stage">
-        {/* Lista de componentes */}
         <div className="mw-components">
           <div className="mw-components-title">Componentes</div>
-          {renderComponent("📡 Magnetrón", "magnetron", startDrag)}
-          {renderComponent("🔌 Fuente de Energía", "powerSource", startDrag)}
-          {renderComponent("🏠 Cavidad Metálica", "metalCavity", startDrag)}
-          {renderComponent("🚪 Puerta del Horno", "doorComponent", startDrag)}
-          {renderComponent("🍗 Pollo", "foodPlate", startDrag)}
+          {juego.componentes.map((componente) =>
+            componente.colocado ? null : renderComponent(componente, startDrag)
+          )}
         </div>
 
-        {/* Microondas (dibujado en CSS) */}
         <div className="mw-frame" ref={frameRef}>
-          <div className="mw-interior" ref={interiorRef}>Cavidad Interior</div>
+          <div
+            className={`mw-interior ${juego.estaComponenteColocado(IDS.cavity) ? "has-cavity" : ""}`}
+            ref={interiorRef}
+          >
+            {juego.estaComponenteColocado(IDS.cavity) ? (
+              juego.estaComponenteColocado(IDS.plate) ? (
+                <div
+                  ref={(el) => {
+                    foodRef.current = el;
+                  }}
+                  className={`food-heating visible${juego.estaEncendido ? " hot" : ""}`}
+                >
+                  🍗 Pollo
+                </div>
+              ) : null
+            ) : (
+              "Cavidad Interior"
+            )}
+          </div>
           <div className="mw-panel">
-            <div className="mw-display" ref={displayRef}>00:00</div>
-            <div className="mw-knob" /><div className="mw-knob" /><div className="mw-knob" />
+            <div className="mw-display">{tiempoPantalla}</div>
+            <div className="mw-knob" />
+            <div className="mw-knob" />
+            <div className="mw-knob" />
           </div>
 
-          {/* Zonas de drop */}
-          <Zone id="magnetronZone" label="Magnetrón" rect={zones.magnetron} />
-          <Zone id="powerZone"     label="Energía"   rect={zones.power} />
-          <Zone id="cavityZone"    label="Cavidad"   rect={zones.cavity} />
-          <Zone id="doorZone"      label="Puerta"    rect={zones.door} />
-          <Zone id="plateZone"     label="Pollo"     rect={zones.plate} round center />
+          {juego.zonas.map((zona) => (
+            <Zone key={zona.id} zona={zona} />
+          ))}
 
-          {/* Puerta */}
-          <div className={`mw-door ${gs.doorPlaced ? "" : "open"}`}>
+          <div className={`mw-door ${juego.estaComponenteColocado(IDS.door) ? "" : "open"}`}>
             <div className="mw-handle" />
-            <div className="mw-window"><div className="mw-mesh" /></div>
+            <div className="mw-window">
+              <div className="mw-mesh" />
+            </div>
           </div>
         </div>
       </div>
 
       <div className="mw-waves" ref={wavesRef} />
 
-      {/* Controles inferiores */}
       <div className="mw-controls">
-        <button className="btn btn-power" onClick={togglePower} disabled={!gs.assemblyComplete}
-          style={{ background: gs.isRunning ? "#e74c3c" : "#27ae60" }}>
-          {gs.isRunning ? "⏹️ Apagar" : "⚡ Encender"}
+        <button
+          className="btn btn-power"
+          onClick={togglePower}
+          disabled={!juego.ensambladoCompleto}
+          style={{ background: juego.estaEncendido ? "#e74c3c" : "#27ae60" }}
+        >
+          {juego.estaEncendido ? "⏹️ Apagar" : "⚡ Encender"}
         </button>
         <button className="btn btn-reset" onClick={reset}>🔄 Reiniciar</button>
-        <button className="btn btn-manual" onClick={() =>
-          showFeedback(`
+        <button
+          className="btn btn-manual"
+          onClick={() =>
+            showFeedback(
+              `
             <h3>📖 Manual del Microondas</h3>
             <div style="text-align:left;margin:16px 0;line-height:1.6">
               <p><b>1.</b> 📡 Magnetrón → arriba izquierda</p>
@@ -435,70 +438,80 @@ export default function GameAmpereMaxwellScene({ onWin }: { onWin?: () => void }
               <p><b>5.</b> 🍗 Pollo → bandeja</p>
               <p><b>6.</b> Pulsa “Encender”.</p>
             </div>
-          `, { duration: 6000 })
-        }>📖 Manual</button>
-        <button className="btn btn-next" onClick={() =>
-          showFeedback(`
+          `,
+              { duration: 6000 }
+            )
+          }
+        >
+          📖 Manual
+        </button>
+        <button
+          className="btn btn-next"
+          onClick={() =>
+            showFeedback(
+              `
             <h3>🔬 Ley de Ampère–Maxwell</h3>
             <div style="text-align:left;margin:16px 0;line-height:1.6">
               <p><b>Idea:</b> E(t) variable genera B(t) y viceversa → ondas EM.</p>
               <p><b>Magnetrón:</b> ~2.45 GHz. La cavidad refleja las ondas.</p>
               <p><b>Calentamiento:</b> vibración molecular (agua) → calor.</p>
             </div>
-          `, { duration: 6000 })
-        }>➡️ Explicación</button>
+          `,
+              { duration: 6000 }
+            )
+          }
+        >
+          ➡️ Explicación
+        </button>
       </div>
 
-      <div className="feedback" id="feedback" ref={feedbackRef} />
+      <div className="feedback" ref={feedbackRef} />
     </div>
   );
 }
 
 function renderComponent(
-  label: string,
-  id: string,
-  onStart: (el: HTMLDivElement, id: string, x: number, y: number) => void
+  componente: ComponenteMicroondas,
+  onStart: (el: HTMLDivElement, id: IdComponenteMicroondas, x: number, y: number) => void
 ) {
   return (
     <div
-      className={`component ${classById(id)}`}
-      id={id}
-      onMouseDown={(e) => onStart(e.currentTarget, id, e.clientX, e.clientY)}
-      onTouchStart={(e) => {
-        const t = e.touches[0];
-        onStart(e.currentTarget, id, t.clientX, t.clientY);
-        e.preventDefault();
+      key={componente.id}
+      className={`component ${classById(componente.id)}`}
+      id={componente.id}
+      onMouseDown={(event) => onStart(event.currentTarget, componente.id, event.clientX, event.clientY)}
+      onTouchStart={(event) => {
+        const touch = event.touches[0];
+        onStart(event.currentTarget, componente.id, touch.clientX, touch.clientY);
+        event.preventDefault();
       }}
     >
-      {label}
+      {componente.etiqueta}
     </div>
   );
 }
-function classById(id: string) {
-  if (id === "magnetron") return "magnetron";
-  if (id === "powerSource") return "power-source";
-  if (id === "metalCavity") return "metal-cavity";
-  if (id === "doorComponent") return "door-component";
+
+function classById(id: IdComponenteMicroondas) {
+  if (id === IDS.magnetron) return "magnetron";
+  if (id === IDS.power) return "power-source";
+  if (id === IDS.cavity) return "metal-cavity";
+  if (id === IDS.door) return "door-component";
   return "food-plate";
 }
 
-function Zone({
-  id, label, rect, round, center,
-}: {
-  id: string;
-  label: string;
-  rect: { top: number; left: number; width: number; height: number };
-  round?: boolean;
-  center?: boolean;
-}) {
+function Zone({ zona }: { zona: ZonaColocacion }) {
+  const classes = ["drop-zone"];
+  if (zona.esCircular) classes.push("round");
+  if (zona.centrada) classes.push("center");
+  if (zona.ocupada) classes.push("filled");
   return (
     <div
-      id={id}
-      className={`drop-zone ${round ? "round" : ""} ${center ? "center" : ""}`}
-      data-label={label}
-      style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
+      id={zona.id}
+      className={classes.join(" ")}
+      data-label={zona.etiqueta}
+      style={{ top: zona.top, left: zona.left, width: zona.width, height: zona.height }}
     >
-      {label}
+      {zona.ocupada ? "" : zona.etiqueta}
     </div>
   );
 }

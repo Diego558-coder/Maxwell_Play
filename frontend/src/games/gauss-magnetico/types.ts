@@ -7,3 +7,16 @@ export type CarData = {
 };
 
 export type Config = (null | CarData)[];
+
+export {
+  DepositoVagones,
+  JuegoGaussMagnetico,
+  Locomotora,
+  Riel,
+  Vagon,
+} from "./modelos";
+export type {
+  ConfiguracionVagon,
+  EstadoAcoples,
+  Polo,
+} from "./modelos";

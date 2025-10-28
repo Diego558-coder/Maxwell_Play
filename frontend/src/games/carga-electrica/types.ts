@@ -1,7 +1,6 @@
-import type { Vector2 as ModeloVector2, Globo as ModeloGlobo } from "./modelos";
+import type { Vector2 as Vector2Class, Globo as GloboClass } from "./modelos";
 
-export type XY = ModeloVector2;
-export type Balloon = ModeloGlobo;
+export { Vector2, Electron, Globo, Mesa, Papelito } from "./modelos";
 
-export type Vector2 = XY;
-export type Globo = Balloon;
+export type XY = Vector2Class;
+export type Balloon = GloboClass;

@@ -1,6 +1,6 @@
 import { BALLOON_W, BALLOON_H } from "./constants";
 import type { Balloon } from "./types";
-import type { Electron } from "./modelos";
+import { Electron } from "./modelos";
 
 export function getLocalRect(child: HTMLElement | null, parent: HTMLElement | null) {
   if (!child || !parent) return null;
@@ -25,6 +25,6 @@ export function makeElectrons(): Electron[] {
     const size = 2.6 + Math.random() * 1.8;
     const x = BALLOON_W / 2 + Math.cos(angle) * rx * radius;
     const y = BALLOON_H / 2 + Math.sin(angle) * ry * radius;
-    return { angle, radius, speed, size, x, y };
+    return new Electron(angle, radius, speed, size, x, y);
   });
 }
