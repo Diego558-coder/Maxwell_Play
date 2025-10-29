@@ -64,6 +64,25 @@ async function manejarRegistro(req: Request, res: Response) {
 
     const id_usuario = (resultado as { insertId: number }).insertId;
 
+    // Crear ficha del estudiante (código ALU-####)
+    const codigo = `ALU-${String(id_usuario).padStart(4, "0")}`;
+    await poolConexiones.query(
+      "INSERT INTO Estudiante (id_estudiante, codigo, grado) VALUES (?, ?, NULL)",
+      [id_usuario, codigo]
+    );
+
+    // Asignar automáticamente al primer docente activo disponible
+    const [docentes] = await poolConexiones.query(
+      "SELECT d.id_docente FROM Docente d JOIN Usuario u ON u.id_usuario = d.id_docente WHERE u.activo = 1 ORDER BY d.id_docente ASC LIMIT 1"
+    );
+    const docente = (docentes as Array<{ id_docente: number }>)[0];
+    if (docente?.id_docente) {
+      await poolConexiones.query(
+        "INSERT INTO Asignacion (id_docente, id_estudiante, fecha, activo) VALUES (?, ?, CURDATE(), 1)",
+        [docente.id_docente, id_usuario]
+      );
+    }
+
     // Generar token JWT
     const token = jwt.sign(
       { id_usuario, nombre, correo, rol: "ESTUDIANTE" },
