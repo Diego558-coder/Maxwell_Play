@@ -1,0 +1,20 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
+const dotenv_1 = __importDefault(require("dotenv"));
+const autenticacion_1 = __importDefault(require("./rutas/autenticacion"));
+const juegos_1 = __importDefault(require("./rutas/juegos"));
+const docentes_1 = __importDefault(require("./rutas/docentes"));
+dotenv_1.default.config();
+const aplicacion = (0, express_1.default)();
+aplicacion.use((0, cors_1.default)());
+aplicacion.use(express_1.default.json());
+aplicacion.get("/", (_req, res) => res.json({ ok: true, nombre: "MaxwellPlay API" }));
+aplicacion.use("/auth", autenticacion_1.default);
+aplicacion.use("/juegos", juegos_1.default);
+aplicacion.use("/api/docentes", docentes_1.default);
+exports.default = aplicacion;

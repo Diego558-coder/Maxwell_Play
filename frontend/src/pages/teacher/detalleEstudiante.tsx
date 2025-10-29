@@ -54,7 +54,7 @@ export default function DetalleEstudiante() {
     setErrorMessage(null);
 
     api
-      .get<Item[]>(`/api/teacher/students/${studentId}/resume`)
+      .get<Item[]>(`/api/docentes/estudiantes/${studentId}/resumen`)
       .then((response: AxiosResponse<Item[]>) => {
         if (!isCancelled) {
           setItems(response.data);
@@ -150,27 +150,27 @@ export default function DetalleEstudiante() {
             return (
               <div className="t-card game" key={item.slug}>
                 <div className="t-card-title">{item.juego_nombre}</div>
-              <div className="t-meta">
-                <div>
+                <div className="t-meta">
+                  <div>
                     <strong>Última sesión:</strong> {ultimaSesion}
-                </div>
-                <div>
+                  </div>
+                  <div>
                     <strong>Tiempo:</strong> {tiempoActual}
-                </div>
-                <div>
+                  </div>
+                  <div>
                     <strong>Mejor tiempo:</strong> {mejorTiempo}
-                </div>
-                <div>
+                  </div>
+                  <div>
                     <strong>Resultado:</strong> {resultado}
+                  </div>
                 </div>
-              </div>
-              <div className="t-badges">
-                <span className={pillClass(item.insignia)}>{item.insignia}</span>
-              </div>
+                <div className="t-badges">
+                  <span className={pillClass(item.insignia)}>{item.insignia}</span>
+                </div>
               </div>
             );
           })}
-  {!isLoading && !isError && displayItems.length === 0 && <div className="t-card">Sin partidas aún.</div>}
+        {!isLoading && !isError && displayItems.length === 0 && <div className="t-card">Sin partidas aún.</div>}
       </div>
     </div>
   );

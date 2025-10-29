@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import api from "../../lib/api";
-import { cerrarSesion } from "../../state/sesion";
-import axios from "axios";
+import api from "@/lib/api";
+import { cerrarSesion } from "@/state/sesion";
+import { isAxiosError } from "axios";
 import type { AxiosResponse } from "axios";
 import "./profesor.css";
 
@@ -30,7 +30,7 @@ export default function ListaProfesores() {
     setErrorMessage(null);
 
     api
-      .get<Row[]>("/api/teacher/students", {
+      .get<Row[]>("/api/docentes/estudiantes", {
         params: {
           docenteId,
         },
@@ -45,7 +45,7 @@ export default function ListaProfesores() {
         if (!isCancelled) {
           setRows([]);
           setStatus("error");
-          const message = axios.isAxiosError(error)
+          const message = isAxiosError(error)
             ? (error.response?.data as { error?: string } | undefined)?.error || error.message
             : (error as Error).message;
           setErrorMessage(message);

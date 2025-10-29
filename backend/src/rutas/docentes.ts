@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { q } from "../db";
+import { consultar } from "../bd";
 
-interface TeacherStudentRow {
+interface FilaEstudianteDocente {
   id_estudiante: number;
   estudiante_nombre: string;
   codigo: string;
@@ -10,7 +10,7 @@ interface TeacherStudentRow {
   ultima_actividad: Date | null;
 }
 
-interface ResumeRow {
+interface FilaResumen {
   id_juego: number;
   slug: string;
   juego_nombre: string;
@@ -22,14 +22,14 @@ interface ResumeRow {
   insignia: "oro" | "plata" | "bronce" | "participó" | "—";
 }
 
-interface BestRow {
+interface FilaMejorTiempo {
   id_juego: number;
   mejor_tiempo_seg: number;
 }
 
-const router = Router();
+const rutasDocentes = Router();
 
-router.get("/students", async (req, res) => {
+rutasDocentes.get("/estudiantes", async (req, res) => {
   try {
     const docenteId = Number(req.query.docenteId);
     const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
@@ -43,7 +43,7 @@ router.get("/students", async (req, res) => {
       SELECT r.*
       FROM vw_docente_alumnos_resumen r
       JOIN Asignacion a ON a.id_estudiante = r.id_estudiante
-  WHERE a.id_docente = ? AND a.activo = 1
+      WHERE a.id_docente = ? AND a.activo = 1
     `;
 
     if (search) {
@@ -53,7 +53,7 @@ router.get("/students", async (req, res) => {
 
     sql += ` ORDER BY r.estudiante_nombre ASC`;
 
-    const rows = await q<TeacherStudentRow>(sql, params);
+  const rows = await consultar<FilaEstudianteDocente>(sql, params);
     res.json(rows);
   } catch (error) {
     const err = error as Error;
@@ -61,14 +61,14 @@ router.get("/students", async (req, res) => {
   }
 });
 
-router.get("/students/:id/resume", async (req, res) => {
+rutasDocentes.get("/estudiantes/:id/resumen", async (req, res) => {
   try {
     const idEst = Number(req.params.id);
     if (!idEst) {
       return res.status(400).json({ error: "id_estudiante inválido" });
     }
 
-    const resumen = await q<ResumeRow>(
+  const resumen = await consultar<FilaResumen>(
       `
       SELECT
         id_juego, slug, juego_nombre,
@@ -79,7 +79,7 @@ router.get("/students/:id/resume", async (req, res) => {
       [idEst]
     );
 
-    const juegos = await q<{ id_juego: number; slug: string; nombre: string }>(
+  const juegos = await consultar<{ id_juego: number; slug: string; nombre: string }>(
       `
       SELECT id_juego, slug, nombre
       FROM juegos
@@ -87,12 +87,12 @@ router.get("/students/:id/resume", async (req, res) => {
     `
     );
 
-    const resumenPorJuego = new Map<number, ResumeRow>();
+  const resumenPorJuego = new Map<number, FilaResumen>();
     for (const row of resumen) {
       resumenPorJuego.set(row.id_juego, row);
     }
 
-    const merged = juegos.map((juego) => {
+    const merged: FilaResumen[] = juegos.map((juego) => {
       const data = resumenPorJuego.get(juego.id_juego);
       if (data) {
         return {
@@ -112,10 +112,10 @@ router.get("/students/:id/resume", async (req, res) => {
         tiempo_seg: null,
         exito: null,
         insignia: "—"
-      } as ResumeRow;
+      };
     });
 
-    const mejores = await q<BestRow>(
+  const mejores = await consultar<FilaMejorTiempo>(
       `
       SELECT
         s.id_juego,
@@ -144,4 +144,4 @@ router.get("/students/:id/resume", async (req, res) => {
   }
 });
 
-export default router;
+export default rutasDocentes;

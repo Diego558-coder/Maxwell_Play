@@ -1,23 +1,23 @@
 import { Router } from "express";
-import { pool } from "../db";
-import { requireAuth } from "../middlewares/requireAuth";
+import { poolConexiones } from "../bd";
+import { requerirAutenticacion } from "../intermedios/requerirAutenticacion";
 
-const router = Router();
+const rutasJuegos = Router();
 
 /**
  * GET /juegos/:id/reglas
  * Lee Reglas y Umbrales para que el front valide el minijuego.
  */
-router.get("/:id/reglas", requireAuth, async (req, res) => {
+rutasJuegos.get("/:id/reglas", requerirAutenticacion, async (req, res) => {
   const id = Number(req.params.id);
   if (!id) return res.status(400).json({ msg: "id inválido" });
 
-  const [reglas] = await pool.query(
+  const [reglas] = await poolConexiones.query(
     "SELECT tipo_pieza, minimo, maximo FROM ReglaPieza WHERE id_juego=?",
     [id]
   );
 
-  const [umb] = await pool.query(
+  const [umb] = await poolConexiones.query(
     "SELECT oro_seg, plata_seg, bronce_seg FROM UmbralesJuego WHERE id_juego=? LIMIT 1",
     [id]
   );
@@ -33,7 +33,7 @@ router.get("/:id/reglas", requireAuth, async (req, res) => {
  * Body: { tiempo_seg: number, completado: 0|1, medalla?: 'ORO'|'PLATA'|'BRONCE' }
  * Lógica: guardar SOLO si mejora mejor_tiempo o mejor_medalla.
  */
-router.post("/:id/progreso", requireAuth, async (req, res) => {
+rutasJuegos.post("/:id/progreso", requerirAutenticacion, async (req, res) => {
   const id_juego = Number(req.params.id);
   const { tiempo_seg, medalla, completado } = req.body || {};
   const user = (req as any).user;
@@ -53,13 +53,13 @@ router.post("/:id/progreso", requireAuth, async (req, res) => {
 
   // Asegurar que exista el registro en Estudiante (por bases legacy sin seed actualizado)
   const codigo = `ALU-${String(user.id_usuario).padStart(4, "0")}`;
-  await pool.query(
+  await poolConexiones.query(
     "INSERT IGNORE INTO Estudiante (id_estudiante, codigo, grado) VALUES (?, ?, '7°')",
     [user.id_usuario, codigo]
   );
 
   // Leer progreso actual
-  const [rows] = await pool.query(
+  const [rows] = await poolConexiones.query(
     "SELECT id_progreso, mejor_tiempo, mejor_medalla FROM Progreso WHERE id_estudiante=? AND id_juego=? LIMIT 1",
     [user.id_usuario, id_juego]
   );
@@ -71,11 +71,11 @@ router.post("/:id/progreso", requireAuth, async (req, res) => {
   };
 
   if (!cur) {
-    await pool.query(
+  await poolConexiones.query(
       "INSERT INTO Progreso (id_estudiante, id_juego, mejor_tiempo, mejor_medalla, completado, fec_ultima_actualizacion) VALUES (?, ?, ?, ?, ?, NOW())",
       [user.id_usuario, id_juego, tiempo, medalla || null, exito]
     );
-    await pool.query(
+  await poolConexiones.query(
       "INSERT INTO juego_sesiones (id_juego, id_estudiante, inicio_ts, fin_ts, tiempo_seg, exito) VALUES (?, ?, ?, ?, ?, ?)",
       [id_juego, user.id_usuario, inicio, now, tiempo, exito]
     );
@@ -94,12 +94,12 @@ router.post("/:id/progreso", requireAuth, async (req, res) => {
     nuevaMedalla = mejorMedalla(medalla, cur.mejor_medalla);
   }
 
-  await pool.query(
+  await poolConexiones.query(
     "UPDATE Progreso SET mejor_tiempo=?, mejor_medalla=?, completado=GREATEST(completado, ?), fec_ultima_actualizacion=NOW() WHERE id_progreso=?",
     [nuevoTiempo, nuevaMedalla, exito, cur.id_progreso]
   );
 
-  await pool.query(
+  await poolConexiones.query(
     "INSERT INTO juego_sesiones (id_juego, id_estudiante, inicio_ts, fin_ts, tiempo_seg, exito) VALUES (?, ?, ?, ?, ?, ?)",
     [id_juego, user.id_usuario, inicio, now, tiempo, exito]
   );
@@ -107,17 +107,17 @@ router.post("/:id/progreso", requireAuth, async (req, res) => {
   res.json({ msg: "Progreso actualizado" });
 });
 
-router.delete("/progreso", requireAuth, async (req, res) => {
+rutasJuegos.delete("/progreso", requerirAutenticacion, async (req, res) => {
   const user = (req as any).user;
 
   if (!user || user.rol !== "ESTUDIANTE") {
     return res.status(403).json({ msg: "Solo los estudiantes pueden reiniciar su progreso" });
   }
 
-  await pool.query("DELETE FROM juego_sesiones WHERE id_estudiante=?", [user.id_usuario]);
-  await pool.query("DELETE FROM Progreso WHERE id_estudiante=?", [user.id_usuario]);
+  await poolConexiones.query("DELETE FROM juego_sesiones WHERE id_estudiante=?", [user.id_usuario]);
+  await poolConexiones.query("DELETE FROM Progreso WHERE id_estudiante=?", [user.id_usuario]);
 
   res.json({ msg: "Progreso reiniciado" });
 });
 
-export default router;
+export default rutasJuegos;

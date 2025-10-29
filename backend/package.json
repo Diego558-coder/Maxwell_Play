@@ -1,12 +1,12 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "dist/server.js",
+  "main": "dist/servidor.js",
   "license": "MIT",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+  "dev": "ts-node-dev --respawn --transpile-only src/servidor.ts",
     "build": "node ./node_modules/typescript/bin/tsc",
-    "start": "node dist/server.js"
+  "start": "node dist/servidor.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
