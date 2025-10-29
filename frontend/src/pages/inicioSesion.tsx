@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAutenticacion } from "../hooks/useAutenticacion";
-import { useNavigate } from "react-router-dom";
 
 export default function InicioSesion() {
   const [correo, setCorreo] = useState("estudiante@demo.com");
@@ -80,6 +80,12 @@ export default function InicioSesion() {
           </div>
           {/* Fin tarjeta */}
         </div>
+        {/* Enlace para registro de usuarios */}
+          <div className="text-center mt-4">
+            <p className="text-sm text-gray-500">
+              ¿No tienes cuenta? <Link to="/registro" className="text-indigo-600 hover:underline">Regístrate aquí</Link>
+            </p>
+          </div>
       </div>
     </div>
   );

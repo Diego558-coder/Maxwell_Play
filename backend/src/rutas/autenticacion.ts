@@ -37,7 +37,55 @@ async function manejarInicioSesion(req: Request, res: Response) {
   return res.json({ token, usuario });
 }
 
+/**
+ * Maneja el registro de nuevos usuarios.
+ */
+async function manejarRegistro(req: Request, res: Response) {
+  const { nombre, correo, contrasenia } = req.body || {};
+  if (!nombre || !correo || !contrasenia) {
+    return res.status(400).json({ msg: "nombre, correo y contrasenia son requeridos" });
+  }
+
+  try {
+    // Verificar si el correo ya está registrado
+    const [usuariosExistentes] = await poolConexiones.query(
+      "SELECT id_usuario FROM Usuario WHERE correo = ? LIMIT 1",
+      [correo]
+    );
+    if ((usuariosExistentes as Array<{ id_usuario: number }>).length > 0) {
+      return res.status(409).json({ msg: "El correo ya está registrado" });
+    }
+
+    // Insertar el nuevo usuario
+    const [resultado] = await poolConexiones.query(
+      "INSERT INTO Usuario (nombre, correo, contrasenia, rol, activo) VALUES (?, ?, MD5(?), 'ESTUDIANTE', 1)",
+      [nombre, correo, contrasenia]
+    );
+
+    const id_usuario = (resultado as { insertId: number }).insertId;
+
+    // Generar token JWT
+    const token = jwt.sign(
+      { id_usuario, nombre, correo, rol: "ESTUDIANTE" },
+      process.env.JWT_SECRET as string,
+      { expiresIn: "8h" }
+    );
+
+    // Registrar la sesión
+    await poolConexiones.query(
+      "INSERT INTO Sesion (id_usuario, inicio, expira, token) VALUES (?, NOW(), DATE_ADD(NOW(), INTERVAL 8 HOUR), ?)",
+      [id_usuario, token]
+    );
+
+    return res.status(201).json({ token, usuario: { id_usuario, nombre, correo, rol: "ESTUDIANTE" } });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Error interno del servidor" });
+  }
+}
+
 rutasAutenticacion.post("/inicio-sesion", manejarInicioSesion);
 rutasAutenticacion.post("/login", manejarInicioSesion); // alias para compatibilidad
+rutasAutenticacion.post("/registro", manejarRegistro);
 
 export default rutasAutenticacion;

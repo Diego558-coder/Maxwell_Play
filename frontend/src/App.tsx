@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
 import InicioSesion from "./pages/inicioSesion";
+import Registro from "./pages/Registro";
 import Menu from "./pages/Menu";
 import JuegoCargaElectrica from "./games/carga-electrica/JuegoCargaElectrica";
 import JuegoGaussMagnetico from "@/games/gauss-magnetico/JuegoGaussMagnetico";
@@ -21,7 +22,7 @@ function App() {
 function Frame() {
   const { pathname } = useLocation();
   const fullBleed =
-    pathname.startsWith("/play/") || pathname === "/menu" || pathname === "/login";
+    pathname.startsWith("/play/") || pathname === "/menu" || pathname === "/login" || pathname === "/registro";
 
   return (
     <div className="min-h-[100dvh] flex flex-col">
@@ -30,6 +31,7 @@ function Frame() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<InicioSesion />} />
+          <Route path="/registro" element={<Registro />} />
           <Route element={<RequireAuth />}>
             {/* Rutas exclusivas por rol */}
             <Route element={<OnlyEstudiante />}>
