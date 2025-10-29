@@ -82,9 +82,11 @@ export default function InicioSesion() {
         </div>
         {/* Enlace para registro de usuarios */}
           <div className="text-center mt-4">
-            <p className="text-sm text-gray-500">
-              ¿No tienes cuenta? <Link to="/registro" className="text-indigo-600 hover:underline">Regístrate aquí</Link>
-            </p>
+            <p className="text-base">
+  <span className="text-black">¿No tienes cuenta? </span>
+  <Link to="/registro" className="text-black hover:underline">Regístrate aquí</Link>
+</p>
+
           </div>
       </div>
     </div>
