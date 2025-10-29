@@ -1,11 +1,11 @@
-// src/games/gauss-magnetico/GameGaussMagnetico.tsx
+// src/games/gauss-magnetico/JuegoGaussMagnetico.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useReglasDelJuego } from "@/hooks/useReglasDelJuego";
 import { registrarProgreso } from "@/lib/api";
 import { marcarCompletado } from "../../lib/progreso";
 import EscenaJuegoGaussMagnetico from "./index";
-import { ID_JUEGO } from "./constants";
+import { CLAVE_JUEGO, ID_JUEGO } from "./constants";
 
 type UmbralesMedalla = { oro_seg: number; plata_seg: number; bronce_seg: number };
 
@@ -45,8 +45,8 @@ export default function JuegoGaussMagnetico() {
     if (temporizadorRef.current) { clearInterval(temporizadorRef.current); temporizadorRef.current = null; }
     const medalla = medallaPorTiempo(segundos);
     try {
-  await registrarProgreso(ID_JUEGO, { tiempo_seg: segundos, completado: 1, medalla });
-  marcarCompletado("gauss-magnetico");
+    await registrarProgreso(ID_JUEGO, { tiempo_seg: segundos, completado: 1, medalla });
+    marcarCompletado(CLAVE_JUEGO);
       setMensaje(`🏁 Juego finalizado — ${segundos}s → ${medalla}`);
       setTimeout(() => navigate("/menu"), 2200);
     } catch (e) {

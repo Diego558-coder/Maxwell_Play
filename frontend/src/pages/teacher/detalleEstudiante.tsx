@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import api from "@/lib/api";
 import { isAxiosError } from "axios";
 import type { AxiosResponse } from "axios";
-import "./teacher.css";
+import "./profesor.css";
 
 type Insignia = "oro" | "plata" | "bronce" | "participó" | "—";
 
@@ -32,7 +32,7 @@ const GAME_ORDER: Array<{ slug: string; nombre: string }> = [
 
 type ApiState = "idle" | "loading" | "ready" | "error";
 
-export default function StudentDetail() {
+export default function DetalleEstudiante() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const [items, setItems] = useState<Item[]>([]);

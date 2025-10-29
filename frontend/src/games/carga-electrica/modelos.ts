@@ -1,8 +1,8 @@
-import { BALLOON_H, BALLOON_W } from "./constants";
+import { ALTO_GLOBO, ANCHO_GLOBO } from "./constants";
 
-type Vector2Init = { x: number; y: number };
+type Vector2Inicial = { x: number; y: number };
 
-type ElectronInit = {
+type ElectronInicial = {
   angle: number;
   radius: number;
   speed: number;
@@ -11,7 +11,7 @@ type ElectronInit = {
   y: number;
 };
 
-type GloboInit = {
+type GloboInicial = {
   id: number;
   color: string;
   pos: Vector2;
@@ -35,7 +35,7 @@ export class Vector2 {
     return new Vector2(0, 0);
   }
 
-  static from(init: Vector2 | Vector2Init): Vector2 {
+  static from(init: Vector2 | Vector2Inicial): Vector2 {
     if (init instanceof Vector2) return init;
     return new Vector2(init.x, init.y);
   }
@@ -54,7 +54,7 @@ export class Vector2 {
     return new Vector2(x, y);
   }
 
-  with({ x = this.x, y = this.y }: Partial<Vector2Init>): Vector2 {
+  with({ x = this.x, y = this.y }: Partial<Vector2Inicial>): Vector2 {
     return new Vector2(x, y);
   }
 }
@@ -76,15 +76,15 @@ export class Electron {
     this.y = y;
   }
 
-  static create(init: Electron | ElectronInit): Electron {
+  static create(init: Electron | ElectronInicial): Electron {
     if (init instanceof Electron) return init;
     return new Electron(init.angle, init.radius, init.speed, init.size, init.x, init.y);
   }
 
   advance(rx: number, ry: number): Electron {
     const nextAngle = this.angle + this.speed;
-    const centerX = BALLOON_W / 2;
-    const centerY = BALLOON_H / 2;
+  const centerX = ANCHO_GLOBO / 2;
+  const centerY = ALTO_GLOBO / 2;
     const x = centerX + Math.cos(nextAngle) * rx * this.radius;
     const y = centerY + Math.sin(nextAngle) * ry * this.radius;
     return new Electron(nextAngle, this.radius, this.speed, this.size, x, y);
@@ -92,9 +92,9 @@ export class Electron {
 }
 
 export class Globo {
-  private readonly state: GloboInit;
+  private readonly state: GloboInicial;
 
-  private constructor(state: GloboInit) {
+  private constructor(state: GloboInicial) {
     this.state = {
       id: state.id,
       color: state.color,
@@ -129,7 +129,7 @@ export class Globo {
   get rope(): number { return this.state.rope; }
   get electrons(): Electron[] { return this.state.electrons; }
 
-  private clone(overrides: Partial<GloboInit>): Globo {
+  private clone(overrides: Partial<GloboInicial>): Globo {
     return new Globo({
       id: overrides.id ?? this.state.id,
       color: overrides.color ?? this.state.color,
@@ -144,11 +144,11 @@ export class Globo {
     });
   }
 
-  withPosition(pos: Vector2 | Vector2Init): Globo {
+  withPosition(pos: Vector2 | Vector2Inicial): Globo {
     return this.clone({ pos: Vector2.from(pos) });
   }
 
-  withVelocity(vel: Vector2 | Vector2Init): Globo {
+  withVelocity(vel: Vector2 | Vector2Inicial): Globo {
     return this.clone({ vel: Vector2.from(vel) });
   }
 

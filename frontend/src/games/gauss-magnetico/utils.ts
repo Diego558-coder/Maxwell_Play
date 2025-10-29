@@ -1,37 +1,40 @@
-// Helpers de UI/DOM sin estado de React
-export function setPoleClass(el: HTMLElement, v: string) {
-  el.textContent = v;
-  el.classList.toggle("n", v === "N");
-  el.classList.toggle("s", v === "S");
+// Utilitarios de UI/DOM sin estado de React
+export function aplicarClasePolo(elemento: HTMLElement, polo: string) {
+  elemento.textContent = polo;
+  elemento.classList.toggle("n", polo === "N");
+  elemento.classList.toggle("s", polo === "S");
 }
 
-export function flipCarElement(carEl: HTMLElement) {
-  const L = carEl.dataset.left!;
-  const R = carEl.dataset.right!;
-  carEl.dataset.left  = R;
-  carEl.dataset.right = L;
-  const poles = carEl.querySelectorAll<HTMLElement>(".pole");
-  setPoleClass(poles[0], carEl.dataset.left!);
-  setPoleClass(poles[1], carEl.dataset.right!);
+export function invertirVagonDom(elementoVagon: HTMLElement) {
+  const poloIzquierdo = elementoVagon.dataset.izquierda!;
+  const poloDerecho = elementoVagon.dataset.derecha!;
+  elementoVagon.dataset.izquierda = poloDerecho;
+  elementoVagon.dataset.derecha = poloIzquierdo;
+  const polos = elementoVagon.querySelectorAll<HTMLElement>(".pole");
+  aplicarClasePolo(polos[0], elementoVagon.dataset.izquierda!);
+  aplicarClasePolo(polos[1], elementoVagon.dataset.derecha!);
 }
 
-export function getCenter(el: HTMLElement) {
-  const r = el.getBoundingClientRect();
-  return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+export function obtenerCentro(elemento: HTMLElement) {
+  const rect = elemento.getBoundingClientRect();
+  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
-export function setSlotDragStyle(
-  slot: HTMLElement,
-  style: "drag-ok" | "drag-bad" | null
+export function establecerEstiloArrastreRanura(
+  ranura: HTMLElement,
+  estilo: "drag-ok" | "drag-bad" | null
 ) {
-  slot.classList.remove("drag-ok", "drag-bad");
-  if (style) slot.classList.add(style);
+  ranura.classList.remove("drag-ok", "drag-bad");
+  if (estilo) ranura.classList.add(estilo);
 }
 
-export function showToast(toast: HTMLElement, html: string, ms = 2200) {
-  toast.innerHTML = html;
-  toast.style.display = "block";
-  type ShowToastFn = typeof showToast & { _t?: ReturnType<typeof setTimeout> };
-  clearTimeout((showToast as ShowToastFn)._t);
-  (showToast as ShowToastFn)._t = setTimeout(() => (toast.style.display = "none"), ms);
+export function mostrarAvisoFlotante(contenedor: HTMLElement, html: string, duracionMs = 2200) {
+  contenedor.innerHTML = html;
+  contenedor.style.display = "block";
+  type FuncionAviso = typeof mostrarAvisoFlotante & { temporizador?: ReturnType<typeof setTimeout> };
+  clearTimeout((mostrarAvisoFlotante as FuncionAviso).temporizador);
+  (mostrarAvisoFlotante as FuncionAviso).temporizador = setTimeout(
+    () => (contenedor.style.display = "none"),
+    duracionMs,
+  );
 }

@@ -1,20 +1,20 @@
-export const BALLOON_W = 48;
-export const BALLOON_H = 66;
-export const ROPE_LEN  = 26;
-export const EXPLANATION_VIDEO_PATH = "/videos/explicacion-carga-electrica.mp4";
+export const ANCHO_GLOBO = 48;
+export const ALTO_GLOBO = 66;
+export const LARGO_CUERDA  = 26;
+export const RUTA_VIDEO_EXPLICACION = "/videos/explicacion-carga-electrica.mp4";
 
 // Papelitos
-export const PAPER_PULL_RADIUS = 180;
-export const PAPER_MAX_PULL    = 70;
-export const PAPER_PULL_SMOOTH = 0.35;
-export const PAPER_MAX_ROT     = 18;
-export const PAPER_MAX_SCALE   = 1.15;
+export const RADIO_ATRACCION_PAPELITOS = 180;
+export const ATRACCION_MAXIMA_PAPELITOS    = 70;
+export const SUAVIZADO_ATRACCION_PAPELITOS = 0.35;
+export const ROTACION_MAXIMA_PAPELITOS     = 18;
+export const ESCALA_MAXIMA_PAPELITOS   = 1.15;
 
 // Física
-export const GRAVITY_BASE   = 0.55;
-export const GRAVITY_CHARGED= 0.38;
-export const BOUNCE         = 0.2;
-export const AIR_FRICTION   = 0.995;
-export const WALL_BOUNCE    = 0.25;
-export const K_REPEL        = 900;
-export const MAX_REPEL_STEP = 0.45;
+export const GRAVEDAD_BASE   = 0.55;
+export const GRAVEDAD_CARGADO= 0.38;
+export const REBOTE         = 0.2;
+export const FRICCION_AIRE   = 0.995;
+export const REBOTE_PARED    = 0.25;
+export const COEFICIENTE_REPELENCIA        = 900;
+export const PASO_MAXIMO_REPELENCIA = 0.45;

@@ -3,10 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { JuegoGaussMagnetico } from "./modelos";
 import type { ConfiguracionVagon, EstadoAcoples } from "./modelos";
+import { CLAVE_JUEGO, ID_JUEGO, RUTA_VIDEO_EXPLICACION } from "./constants";
 import "./gauss.css";
-
-const GAME_ID = "gauss-magnetico";
-const EXPLANATION_VIDEO_PATH = "/videos/explicacion-gauss-magnetico.mp4";
 
 // Banco inicial (igual al tuyo)
 const bancoInicial: ConfiguracionVagon[] = [
@@ -19,21 +17,21 @@ const bancoInicial: ConfiguracionVagon[] = [
   { id: 7, poloIzquierdo: "N", poloDerecho: "S" },
 ];
 
-export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void }) {
+export default function EscenaJuegoGaussMagnetico({ alGanar }: { alGanar?: () => void }) {
   const navigate = useNavigate();
 
   const [juego, setJuego] = useState(() =>
     JuegoGaussMagnetico.crearInicial({ vagones: bancoInicial, capacidad: 4 })
   );
-  const [toast, setToast] = useState<string>("");
-  const [moving, setMoving] = useState(false);
-  const [showWin, setShowWin] = useState(false);
-  const [showNext, setShowNext] = useState(false);
-  const winTriggered = useRef(false);
+  const [mensajeTemporal, setMensajeTemporal] = useState<string>("");
+  const [enMovimiento, setEnMovimiento] = useState(false);
+  const [mostrarVictoria, setMostrarVictoria] = useState(false);
+  const [mostrarExplicacion, setMostrarExplicacion] = useState(false);
+  const victoriaActivadaRef = useRef(false);
 
-  const showToast = (msg: string, ms = 2000) => {
-    setToast(msg);
-    window.setTimeout(() => setToast(""), ms);
+  const mostrarAviso = (mensaje: string, duracionMs = 2000) => {
+    setMensajeTemporal(mensaje);
+    window.setTimeout(() => setMensajeTemporal(""), duracionMs);
   };
 
   const acoples = useMemo<EstadoAcoples>(() => juego.estadoAcoples(), [juego]);
@@ -41,58 +39,58 @@ export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void 
   const ranuras = juego.obtenerRanuras();
   const seleccionadoId = juego.seleccionadoId;
 
-  const onSelectFromBank = (id: number) => {
+  const alSeleccionarEnDeposito = (id: number) => {
     setJuego((actual) => actual.alternarSeleccion(id));
   };
 
-  const rotateBank = (id: number) => {
+  const girarEnDeposito = (id: number) => {
     setJuego((actual) => actual.girarVagonEnDeposito(id));
   };
 
-  const rotateInSlot = (pos: number) => {
-    setJuego((actual) => actual.girarVagonEnSlot(pos));
+  const girarEnRanura = (posicion: number) => {
+    setJuego((actual) => actual.girarVagonEnSlot(posicion));
   };
 
-  const placeSelectedIn = (pos: number) => {
+  const colocarEnPosicion = (posicion: number) => {
     setJuego((actual) => {
-      const resultado = actual.colocarSeleccionEn(pos);
+      const resultado = actual.colocarSeleccionEn(posicion);
       if (resultado.estado === "sin-seleccion") {
-        showToast("Selecciona primero un vagón del menú.", 1200);
+        mostrarAviso("Selecciona primero un vagón del menú.", 1200);
         return actual;
       }
       if (resultado.estado === "polaridad") {
-        showToast("❌ Acople inválido: deben juntarse polos opuestos (N–S).", 1600);
+        mostrarAviso("❌ Acople inválido: deben juntarse polos opuestos (N–S).", 1600);
         return actual;
       }
       return resultado.juego;
     });
   };
 
-  const removeFromSlot = (pos: number) => {
-    setJuego((actual) => actual.removerDeSlot(pos));
+  const removerDeRanura = (posicion: number) => {
+    setJuego((actual) => actual.removerDeSlot(posicion));
   };
 
   useEffect(() => {
-    if (moving || showWin || winTriggered.current) return;
+    if (enMovimiento || mostrarVictoria || victoriaActivadaRef.current) return;
     if (juego.listoParaAvanzar()) {
-      setMoving(true);
-      setTimeout(() => setShowWin(true), 50);
-      winTriggered.current = true;
-      onWin?.();
+      setEnMovimiento(true);
+      setTimeout(() => setMostrarVictoria(true), 50);
+      victoriaActivadaRef.current = true;
+      alGanar?.();
     }
-  }, [juego, moving, showWin, onWin]);
+  }, [juego, enMovimiento, mostrarVictoria, alGanar]);
 
-  function onReset() {
+  function reiniciarJuego() {
     setJuego(JuegoGaussMagnetico.crearInicial({ vagones: bancoInicial, capacidad: 4 }));
-    setToast("");
-    setMoving(false);
-    setShowWin(false);
-    setShowNext(false);
-    winTriggered.current = false;
+    setMensajeTemporal("");
+    setEnMovimiento(false);
+    setMostrarVictoria(false);
+    setMostrarExplicacion(false);
+    victoriaActivadaRef.current = false;
   }
 
-  function onHelp() {
-    showToast(
+  function mostrarInstrucciones() {
+    mostrarAviso(
       `📖 <b>Manual</b><br>
        1) La locomotora es S–N (izq–der).<br>
        2) Haz clic en un vagón y luego en una casilla.<br>
@@ -103,9 +101,9 @@ export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void 
     );
   }
 
-  function onAcceptWin() {
-    setShowWin(false);
-    setShowNext(true);
+  function aceptarVictoria() {
+    setMostrarVictoria(false);
+    setMostrarExplicacion(true);
   }
 
   return (
@@ -128,14 +126,14 @@ export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void 
               <div
                 key={vagon.id}
                 className={`car ${seleccionadoId === vagon.id ? "selected" : ""}`}
-                onClick={() => onSelectFromBank(vagon.id)}
-                onDoubleClick={() => rotateBank(vagon.id)}
+                onClick={() => alSeleccionarEnDeposito(vagon.id)}
+                onDoubleClick={() => girarEnDeposito(vagon.id)}
                 onContextMenu={(e) => {
                   e.preventDefault();
-                  rotateBank(vagon.id);
+                  girarEnDeposito(vagon.id);
                 }}
-                data-left={vagon.poloIzquierdo}
-                data-right={vagon.poloDerecho}
+                data-izquierda={vagon.poloIzquierdo}
+                data-derecha={vagon.poloDerecho}
               >
                 <span className={`pole ${vagon.poloIzquierdo === "N" ? "n" : "s"}`}>{vagon.poloIzquierdo}</span>
                 <span>V</span>
@@ -149,8 +147,8 @@ export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void 
         <div className="sleepers" />
 
         {/* Tren */}
-        <div className={`train-area ${moving ? "moving" : ""}`} id="trainArea">
-          <div className="loco" id="loco" data-left="S" data-right="N">
+        <div className={`train-area ${enMovimiento ? "moving" : ""}`} id="trainArea">
+          <div className="loco" id="loco" data-izquierda="S" data-derecha="N">
             <span className="pole s">S</span><span>LOCO</span><span className="pole n">N</span>
             <div className="wheels"><div className="wheel" /><div className="wheel" /><div className="wheel" /></div>
           </div>
@@ -168,15 +166,15 @@ export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void 
                 <div
                   className={`slot ${vagon ? "filled" : ""}`}
                   data-pos={pos}
-                  onClick={() => placeSelectedIn(pos)}
-                  onDoubleClick={() => removeFromSlot(pos)}
+                  onClick={() => colocarEnPosicion(pos)}
+                  onDoubleClick={() => removerDeRanura(pos)}
                   onContextMenu={(e) => {
                     e.preventDefault();
-                    rotateInSlot(pos);
+                    girarEnRanura(pos);
                   }}
                 >
                   {vagon ? (
-                    <div className="car" data-left={vagon.poloIzquierdo} data-right={vagon.poloDerecho}>
+                    <div className="car" data-izquierda={vagon.poloIzquierdo} data-derecha={vagon.poloDerecho}>
                       <span className={`pole ${vagon.poloIzquierdo === "N" ? "n" : "s"}`}>{vagon.poloIzquierdo}</span>
                       <span>V</span>
                       <span className={`pole ${vagon.poloDerecho === "N" ? "n" : "s"}`}>{vagon.poloDerecho}</span>
@@ -199,22 +197,22 @@ export default function GameGaussMagneticoScene({ onWin }: { onWin?: () => void 
 
         {/* Controles */}
         <div className="controls">
-          <button className="btn reset" id="btnReset" onClick={onReset}>🔄 Reiniciar</button>
-          <button className="btn help" id="btnHelp" onClick={onHelp}>📖 Manual</button>
-          <button className="btn next" id="btnNext" style={{ display: showNext ? "inline-block" : "none" }}
-            onClick={() => navigate("/explicacion", { state: { src: EXPLANATION_VIDEO_PATH, gameId: GAME_ID } })}
+          <button className="btn reset" id="btnReiniciar" onClick={reiniciarJuego}>🔄 Reiniciar</button>
+          <button className="btn help" id="btnManual" onClick={mostrarInstrucciones}>📖 Manual</button>
+          <button className="btn next" id="btnExplicacion" style={{ display: mostrarExplicacion ? "inline-block" : "none" }}
+            onClick={() => navigate("/explicacion", { state: { src: RUTA_VIDEO_EXPLICACION, gameId: CLAVE_JUEGO, juegoIdNumerico: ID_JUEGO } })}
           >🎬 Explicación</button>
         </div>
 
         {/* Toast */}
-        <div className="toast" id="toast" style={{ display: toast ? "block" : "none" }} dangerouslySetInnerHTML={{ __html: toast }} />
+        <div className="toast" id="avisoFlotante" style={{ display: mensajeTemporal ? "block" : "none" }} dangerouslySetInnerHTML={{ __html: mensajeTemporal }} />
 
         {/* Modal de victoria */}
-        <div className="modal" id="winModal" style={{ display: showWin ? "grid" : "none" }}>
+        <div className="modal" id="modalVictoria" style={{ display: mostrarVictoria ? "grid" : "none" }}>
           <div className="card">
             <h3>¡Felicitaciones! 🎉</h3>
             <p>Lo completaste. Pulsa “Aceptar” y se habilitará el botón “Explicación”.</p>
-            <button className="btn ok" id="btnWinOk" onClick={onAcceptWin}>Aceptar</button>
+            <button className="btn ok" id="btnAceptarVictoria" onClick={aceptarVictoria}>Aceptar</button>
           </div>
         </div>
       </div>

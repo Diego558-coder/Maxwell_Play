@@ -1,4 +1,4 @@
-import { BALLOON_H, BALLOON_W } from "../constants";
+import { ALTO_GLOBO, ANCHO_GLOBO } from "../constants";
 
 export type ElectronInit = {
   angle: number;
@@ -33,8 +33,8 @@ export class Electron {
 
   advance(rx: number, ry: number): Electron {
     const nextAngle = this.angle + this.speed;
-    const centerX = BALLOON_W / 2;
-    const centerY = BALLOON_H / 2;
+  const centerX = ANCHO_GLOBO / 2;
+  const centerY = ALTO_GLOBO / 2;
     const x = centerX + Math.cos(nextAngle) * rx * this.radius;
     const y = centerY + Math.sin(nextAngle) * ry * this.radius;
     return new Electron(nextAngle, this.radius, this.speed, this.size, x, y);

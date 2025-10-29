@@ -1,14 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
-import Login from "./pages/Login";
+import InicioSesion from "./pages/inicioSesion";
 import Menu from "./pages/Menu";
-import GameCargaElectrica from "./games/carga-electrica/GameCargaElectrica";
-import GameGaussMagnetico from "@/games/gauss-magnetico/GameGaussMagnetico";
+import JuegoCargaElectrica from "./games/carga-electrica/JuegoCargaElectrica";
+import JuegoGaussMagnetico from "@/games/gauss-magnetico/JuegoGaussMagnetico";
 import GameCiclaDinamo from "@/games/cicla-dinamo/GameCiclaDinamo";
 import GameMicroondas from "@/games/microondas/GameMicroondas";
 import GameWifiRouter from "@/games/wifi-router";
-import TeacherList from "./pages/teacher/TeacherList";
-import StudentDetail from "./pages/teacher/StudentDetail";
-import { obtenerSesion } from "./state/session";
+import ListaProfesores from "./pages/teacher/listaProfesores";
+import DetalleEstudiante from "./pages/teacher/detalleEstudiante";
+import { obtenerSesion } from "./state/sesion";
 
 function App() {
   return (
@@ -29,18 +29,18 @@ function Frame() {
       <div className={fullBleed ? "flex-1" : "flex-1 max-w-5xl mx-auto p-4"}>
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<InicioSesion />} />
           <Route element={<RequireAuth />}>
             {/* Rutas exclusivas por rol */}
             <Route element={<OnlyEstudiante />}>
               <Route path="/menu" element={<Menu />} />
             </Route>
             <Route element={<OnlyDocente />}>
-              <Route path="/docente" element={<TeacherList />} />
-              <Route path="/docente/alumno/:id" element={<StudentDetail />} />
+              <Route path="/docente" element={<ListaProfesores />} />
+              <Route path="/docente/alumno/:id" element={<DetalleEstudiante />} />
             </Route>
-            <Route path="/play/carga-electrica" element={<GameCargaElectrica />} />
-            <Route path="/play/gauss-magnetico" element={<GameGaussMagnetico />} />
+            <Route path="/play/carga-electrica" element={<JuegoCargaElectrica />} />
+            <Route path="/play/gauss-magnetico" element={<JuegoGaussMagnetico />} />
             <Route path="/play/cicla-dinamo" element={<GameCiclaDinamo />} />
             <Route path="/microondas" element={<GameMicroondas />} />
             <Route path="/play/ampere-maxwell" element={<GameMicroondas />} />

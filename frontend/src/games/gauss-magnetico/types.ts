@@ -1,12 +1,12 @@
-export type Emitter = { x: number; y: number; hue: number; key: string };
+export type EmisorOndas = { posicionX: number; posicionY: number; tono: number; clave: string };
 
-export type CarData = {
-  left: string;
-  right: string;
-  el: HTMLElement;
+export type DatosVagonDom = {
+  poloIzquierdo: string;
+  poloDerecho: string;
+  elemento: HTMLElement;
 };
 
-export type Config = (null | CarData)[];
+export type ConfiguracionVagonesDom = (null | DatosVagonDom)[];
 
 export {
   DepositoVagones,

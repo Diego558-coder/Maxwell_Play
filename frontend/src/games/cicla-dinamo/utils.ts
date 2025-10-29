@@ -1,2 +1,2 @@
-export const clamp = (v: number, lo: number, hi: number) =>
-  Math.max(lo, Math.min(hi, v));
+export const acotar = (valor: number, minimo: number, maximo: number) =>
+  Math.max(minimo, Math.min(maximo, valor));

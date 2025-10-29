@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useReglasJuego } from "../hooks/useReglasJuego";
-import { postProgreso } from "../lib/api";
+import { useReglasDelJuego } from "../hooks/useReglasDelJuego";
+import { registrarProgreso } from "../lib/api";
 
 export default function Juego({ idJuego }: { idJuego: number }) {
-  const { reglas, umbrales, cargando, error } = useReglasJuego(idJuego);
+  const { reglas, umbrales, cargando, error } = useReglasDelJuego(idJuego);
   const [tiempo, setTiempo] = useState(58);
   const [medalla, setMedalla] = useState<"ORO"|"PLATA"|"BRONCE"|"">("PLATA");
   const [msg, setMsg] = useState<string>("");
@@ -11,7 +11,7 @@ export default function Juego({ idJuego }: { idJuego: number }) {
   const enviar = async () => {
     setMsg("");
     try {
-      const { msg } = await postProgreso(idJuego, {
+  const { msg } = await registrarProgreso(idJuego, {
         tiempo_seg: Number(tiempo),
         completado: true,
         medalla: medalla || undefined

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
-import { obtenerSesion, cerrarSesion } from "@/state/session";
-import { isCompleted, resetAll } from "@/lib/progress";
+import { obtenerSesion, cerrarSesion } from "@/state/sesion";
+import { estaCompletado, reiniciarTodo } from "../lib/progreso";
 
 type Card = {
   id: number;
@@ -80,7 +80,7 @@ export default function Menu() {
         </p>
         <div className="mt-3 md:mt-4 flex gap-2 justify-center">
           {!sesion ? (
-            <button onClick={() => nav('/login')} className="px-3 py-1 rounded bg-white/20 hover:bg-white/30 font-bold">
+            <button onClick={() => nav('/inicio-sesion')} className="px-3 py-1 rounded bg-white/20 hover:bg-white/30 font-bold">
               Iniciar sesión
             </button>
           ) : (
@@ -98,7 +98,7 @@ export default function Menu() {
               return;
             }
             try {
-              await resetAll();
+              await reiniciarTodo();
               location.reload();
             } catch (err) {
               console.error(err);
@@ -115,7 +115,7 @@ export default function Menu() {
       <main className="relative max-w-6xl mx-auto px-4 pb-10">
         <div className="grid gap-5 md:gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {cards.map((c) => {
-            const completed = isCompleted(c.gameId);
+            const completed = estaCompletado(c.gameId);
             return (
               <article
                 key={c.id}

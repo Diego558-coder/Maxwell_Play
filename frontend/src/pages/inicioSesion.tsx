@@ -1,16 +1,16 @@
 import { useState } from "react";
-import { useAuth } from "../hooks/useAuth";
+import { useAutenticacion } from "../hooks/useAutenticacion";
 import { useNavigate } from "react-router-dom";
 
-export default function Login() {
+export default function InicioSesion() {
   const [correo, setCorreo] = useState("estudiante@demo.com");
   const [contrasenia, setContrasenia] = useState("demo123");
-  const { doLogin, cargando, error } = useAuth();
+  const { iniciarSesion, cargando, error } = useAutenticacion();
   const nav = useNavigate();
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ok = await doLogin(correo, contrasenia);
+  const ok = await iniciarSesion(correo, contrasenia);
     if (!ok) return;
     // Redirigir según el rol almacenado en localStorage tras el login
     try {

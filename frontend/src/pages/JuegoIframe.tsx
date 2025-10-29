@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { postProgreso } from "@/lib/api";
-import { markCompleted } from "@/lib/progress";
+import { registrarProgreso } from "@/lib/api";
+import { marcarCompletado } from "../lib/progreso";
 
 // slug -> idJuego (ajústalo con los que tengas)
 const MAPEO_ID: Record<string, number> = {
@@ -26,12 +26,12 @@ export default function JuegoIframe({ slug }: { slug: string }) {
         return;
       }
       try {
-        const r = await postProgreso(idJuego, {
+  const r = await registrarProgreso(idJuego, {
           tiempo_seg: Number(tiempo_seg),
           medalla,
           completado: !!completado
         });
-        if (completado) markCompleted(slug);
+  if (completado) marcarCompletado(slug);
         setMsg(r.msg || "Progreso guardado");
       } catch (e) {
         const error = e as { response?: { data?: { msg?: string } } };

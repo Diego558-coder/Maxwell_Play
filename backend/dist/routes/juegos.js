@@ -28,9 +28,19 @@ router.post("/:id/progreso", requireAuth_1.requireAuth, async (req, res) => {
     const id_juego = Number(req.params.id);
     const { tiempo_seg, medalla, completado } = req.body || {};
     const user = req.user;
+    if (!user || user.rol !== "ESTUDIANTE") {
+        return res.status(403).json({ msg: "Solo los estudiantes pueden registrar progreso" });
+    }
     if (!id_juego || typeof tiempo_seg !== "number") {
         return res.status(400).json({ msg: "Datos inválidos" });
     }
+    const tiempo = Math.max(0, Math.round(tiempo_seg));
+    const exito = completado ? 1 : 0;
+    const now = new Date();
+    const inicio = new Date(now.getTime() - tiempo * 1000);
+    // Asegurar que exista el registro en Estudiante (por bases legacy sin seed actualizado)
+    const codigo = `ALU-${String(user.id_usuario).padStart(4, "0")}`;
+    await db_1.pool.query("INSERT IGNORE INTO Estudiante (id_estudiante, codigo, grado) VALUES (?, ?, '7°')", [user.id_usuario, codigo]);
     // Leer progreso actual
     const [rows] = await db_1.pool.query("SELECT id_progreso, mejor_tiempo, mejor_medalla FROM Progreso WHERE id_estudiante=? AND id_juego=? LIMIT 1", [user.id_usuario, id_juego]);
     const cur = rows[0];
@@ -39,20 +49,31 @@ router.post("/:id/progreso", requireAuth_1.requireAuth, async (req, res) => {
         return (orden[a || ""] >= orden[b || ""]) ? a : b;
     };
     if (!cur) {
-        await db_1.pool.query("INSERT INTO Progreso (id_estudiante, id_juego, mejor_tiempo, mejor_medalla, completado, fec_ultima_actualizacion) VALUES (?, ?, ?, ?, ?, NOW())", [user.id_usuario, id_juego, tiempo_seg, medalla || null, completado ? 1 : 0]);
+        await db_1.pool.query("INSERT INTO Progreso (id_estudiante, id_juego, mejor_tiempo, mejor_medalla, completado, fec_ultima_actualizacion) VALUES (?, ?, ?, ?, ?, NOW())", [user.id_usuario, id_juego, tiempo, medalla || null, exito]);
+        await db_1.pool.query("INSERT INTO juego_sesiones (id_juego, id_estudiante, inicio_ts, fin_ts, tiempo_seg, exito) VALUES (?, ?, ?, ?, ?, ?)", [id_juego, user.id_usuario, inicio, now, tiempo, exito]);
         return res.json({ msg: "Progreso creado" });
     }
     let nuevoTiempo = cur.mejor_tiempo;
     let nuevaMedalla = cur.mejor_medalla;
     // Mejora por tiempo (menor es mejor)
-    if (cur.mejor_tiempo == null || tiempo_seg < cur.mejor_tiempo) {
-        nuevoTiempo = tiempo_seg;
+    if (cur.mejor_tiempo == null || tiempo < cur.mejor_tiempo) {
+        nuevoTiempo = tiempo;
     }
     // Mejora por medalla (ORO>PLATA>BRONCE)
     if (medalla) {
         nuevaMedalla = mejorMedalla(medalla, cur.mejor_medalla);
     }
-    await db_1.pool.query("UPDATE Progreso SET mejor_tiempo=?, mejor_medalla=?, completado=GREATEST(completado, ?), fec_ultima_actualizacion=NOW() WHERE id_progreso=?", [nuevoTiempo, nuevaMedalla, completado ? 1 : 0, cur.id_progreso]);
+    await db_1.pool.query("UPDATE Progreso SET mejor_tiempo=?, mejor_medalla=?, completado=GREATEST(completado, ?), fec_ultima_actualizacion=NOW() WHERE id_progreso=?", [nuevoTiempo, nuevaMedalla, exito, cur.id_progreso]);
+    await db_1.pool.query("INSERT INTO juego_sesiones (id_juego, id_estudiante, inicio_ts, fin_ts, tiempo_seg, exito) VALUES (?, ?, ?, ?, ?, ?)", [id_juego, user.id_usuario, inicio, now, tiempo, exito]);
     res.json({ msg: "Progreso actualizado" });
+});
+router.delete("/progreso", requireAuth_1.requireAuth, async (req, res) => {
+    const user = req.user;
+    if (!user || user.rol !== "ESTUDIANTE") {
+        return res.status(403).json({ msg: "Solo los estudiantes pueden reiniciar su progreso" });
+    }
+    await db_1.pool.query("DELETE FROM juego_sesiones WHERE id_estudiante=?", [user.id_usuario]);
+    await db_1.pool.query("DELETE FROM Progreso WHERE id_estudiante=?", [user.id_usuario]);
+    res.json({ msg: "Progreso reiniciado" });
 });
 exports.default = router;

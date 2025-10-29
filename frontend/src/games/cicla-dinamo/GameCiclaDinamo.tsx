@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import GameCiclaDinamoScene from "./Scene";
+import EscenaJuegoCiclaDinamo from "./Scene";
 // Si en tu proyecto usas lo mismo que el tren:
-import { useReglasJuego } from "@/hooks/useReglasJuego";
-import { postProgreso } from "@/lib/api";
-import { markCompleted } from "@/lib/progress";
+import { useReglasDelJuego } from "@/hooks/useReglasDelJuego";
+import { registrarProgreso } from "@/lib/api";
+import { marcarCompletado } from "../../lib/progreso";
 
 const ID_JUEGO = 4; // id asignado en la tabla Minijuego
 
@@ -17,7 +17,7 @@ export default function GameCiclaDinamo() {
   const timerRef = useRef<number | null>(null);
   const navigate = useNavigate();
 
-  const { umbrales } = useReglasJuego(ID_JUEGO);
+  const { umbrales } = useReglasDelJuego(ID_JUEGO);
 
   useEffect(() => {
     if (!running) return;
@@ -39,13 +39,13 @@ export default function GameCiclaDinamo() {
     return "BRONCE";
   }
 
-  async function onExito() {
+  async function alCompletarJuego() {
     setRunning(false);
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     const medalla = medallaPorTiempo(seg);
     try {
-      await postProgreso(ID_JUEGO, { tiempo_seg: seg, completado: 1, medalla });
-      markCompleted("cicla-dinamo");
+      await registrarProgreso(ID_JUEGO, { tiempo_seg: seg, completado: 1, medalla });
+      marcarCompletado("cicla-dinamo");
       setMsg(`🏁 Juego finalizado — ${seg}s → ${medalla}`);
       setTimeout(() => navigate("/menu"), 2200);
     } catch (e) {
@@ -57,7 +57,7 @@ export default function GameCiclaDinamo() {
   // La Scene ahora muestra la cabecera y el cronómetro integrado
   return (
     <div className="relative h-[100dvh] w-full">
-      <GameCiclaDinamoScene onWin={onExito} timeSec={seg} />
+      <EscenaJuegoCiclaDinamo alGanar={alCompletarJuego} segundosTranscurridos={seg} />
 
       <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 text-white/90 text-sm whitespace-nowrap">
         {um && (

@@ -1,10 +1,10 @@
 // src/games/microondas/GameMicroondas.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useReglasJuego } from "@/hooks/useReglasJuego";
-import { postProgreso } from "@/lib/api";
-import { markCompleted } from "@/lib/progress";
-import GameAmpereMaxwellScene from "./index";
+import { useReglasDelJuego } from "@/hooks/useReglasDelJuego";
+import { registrarProgreso } from "@/lib/api";
+import { marcarCompletado } from "../../lib/progreso";
+import GameAmpereMaxwellScene from "./index.tsx";
 
 const ID_JUEGO = 1; // id registrado en la tabla Minijuego
 const LOCAL_KEY = "ampere-maxwell";
@@ -19,7 +19,7 @@ export default function GameMicroondas() {
   const navigate = useNavigate();
 
   // umbrales desde backend
-  const { umbrales } = useReglasJuego(ID_JUEGO);
+  const { umbrales } = useReglasDelJuego(ID_JUEGO);
 
   useEffect(() => {
     if (!running) return;
@@ -45,8 +45,8 @@ export default function GameMicroondas() {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     const medalla = medallaPorTiempo(seg);
     try {
-      await postProgreso(ID_JUEGO, { tiempo_seg: seg, completado: 1, medalla });
-      markCompleted(LOCAL_KEY);
+      await registrarProgreso(ID_JUEGO, { tiempo_seg: seg, completado: 1, medalla });
+      marcarCompletado(LOCAL_KEY);
       setMsg(`🏁 Juego finalizado — ${seg}s → ${medalla}`);
       setTimeout(() => navigate("/menu"), 2200);
     } catch (err) {

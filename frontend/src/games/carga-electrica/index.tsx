@@ -3,77 +3,77 @@ import { Link } from "react-router-dom";
 import "./carga.css";
 
 import {
-  BALLOON_H, BALLOON_W, ROPE_LEN,
-  PAPER_MAX_PULL, PAPER_MAX_ROT, PAPER_MAX_SCALE, PAPER_PULL_RADIUS, PAPER_PULL_SMOOTH,
-  GRAVITY_BASE, GRAVITY_CHARGED, BOUNCE, AIR_FRICTION, WALL_BOUNCE, K_REPEL, MAX_REPEL_STEP
+  ALTO_GLOBO, ANCHO_GLOBO, LARGO_CUERDA,
+  ATRACCION_MAXIMA_PAPELITOS, ROTACION_MAXIMA_PAPELITOS, ESCALA_MAXIMA_PAPELITOS, RADIO_ATRACCION_PAPELITOS, SUAVIZADO_ATRACCION_PAPELITOS,
+  GRAVEDAD_BASE, GRAVEDAD_CARGADO, REBOTE, FRICCION_AIRE, REBOTE_PARED, COEFICIENTE_REPELENCIA, PASO_MAXIMO_REPELENCIA
 } from "./constants";
 
 import { Globo, Vector2 } from "./types";
-type ModalState = { title: string; body: string } | null;
-import { getLocalRect, onTopOfTable, makeElectrons } from "./utils";
+type EstadoModal = { titulo: string; cuerpo: string } | null;
+import { obtenerRectanguloLocal, globoSobreMesa, generarElectrones } from "./utils";
 import PersonHair from "./components/PersonHair";
 
 export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
-  const gameRef = useRef<HTMLDivElement | null>(null);
-  const hairRef = useRef<HTMLDivElement | null>(null);
-  const balloonsAreaRef = useRef<HTMLDivElement | null>(null);
-  const centerTableRef = useRef<HTMLDivElement | null>(null);
-  const papersTableRef = useRef<HTMLDivElement | null>(null);
+  const juegoRef = useRef<HTMLDivElement | null>(null);
+  const cabelloRef = useRef<HTMLDivElement | null>(null);
+  const areaGlobosRef = useRef<HTMLDivElement | null>(null);
+  const mesaCentralRef = useRef<HTMLDivElement | null>(null);
+  const mesaPapelitosRef = useRef<HTMLDivElement | null>(null);
 
-  const [balloons, setBalloons] = useState<Globo[]>(() => [
+  const [globos, definirGlobos] = useState<Globo[]>(() => [
     Globo.create({ id: 1, color: "#45c2a8" }),
     Globo.create({ id: 2, color: "#e85d5d" }),
     Globo.create({ id: 3, color: "#f77f00" }),
     Globo.create({ id: 4, color: "#fcbf49" }),
   ]);
 
-  const [draggingId, setDraggingId] = useState<number | null>(null);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [idArrastre, definirIdArrastre] = useState<number | null>(null);
+  const [desplazamiento, definirDesplazamiento] = useState({ x: 0, y: 0 });
 
-  const [feedback, setFeedback] = useState<ModalState>(null);
-  const chargedShown = useRef(false);
+  const [modal, definirModal] = useState<EstadoModal>(null);
+  const cargaMostradaRef = useRef(false);
 
-  const [papersAttracted, setPapersAttracted] = useState(false);
-  const [hasWon, setHasWon] = useState(false);
-  const totalBalloons = balloons.length;
-  const chargedCount = balloons.filter((b) => b.charged).length;
-  const allCharged = totalBalloons > 0 && chargedCount === totalBalloons;
+  const [papelitosAtraidos, definirPapelitosAtraidos] = useState(false);
+  const [gano, definirGano] = useState(false);
+  const totalGlobos = globos.length;
+  const globosCargados = globos.filter((b) => b.charged).length;
+  const todosCargados = totalGlobos > 0 && globosCargados === totalGlobos;
 
-  const exitoNotificado = useRef(false);
-  const onExitoRef = useRef(onExito);
-  useEffect(() => { onExitoRef.current = onExito; }, [onExito]);
+  const exitoNotificadoRef = useRef(false);
+  const alExitoRef = useRef(onExito);
+  useEffect(() => { alExitoRef.current = onExito; }, [onExito]);
 
   // ===== papelitos =====
-  function resetPapersTransform() {
-    const table = papersTableRef.current;
-    if (!table) return;
-    const papers = table.querySelectorAll<HTMLElement>(".paper-piece");
-    papers.forEach((p) => {
+  function restablecerTransformacionPapelitos() {
+    const mesa = mesaPapelitosRef.current;
+    if (!mesa) return;
+    const papelitos = mesa.querySelectorAll<HTMLElement>(".paper-piece");
+    papelitos.forEach((p) => {
       p.style.transition = "transform 0.35s ease-in";
       p.style.transform = "translate(0px, 0px) rotate(0deg) scale(1)";
     });
   }
 
-  const updatePaperAttraction = useCallback((id: number, clientX: number, clientY: number) => {
-    const b = balloons.find((x) => x.id === id);
-    const table = papersTableRef.current;
-    if (!b || !table) return;
+  const actualizarAtraccionPapelitos = useCallback((id: number, clientX: number, clientY: number) => {
+    const globo = globos.find((x) => x.id === id);
+    const mesa = mesaPapelitosRef.current;
+    if (!globo || !mesa) return;
 
-    if (!b.charged) {
-      setPapersAttracted(false);
-      resetPapersTransform();
+    if (!globo.charged) {
+      definirPapelitosAtraidos(false);
+      restablecerTransformacionPapelitos();
       return;
     }
 
-    const tr = table.getBoundingClientRect();
-    const cx = tr.left + tr.width / 2;
-    const cy = tr.top + tr.height / 2;
-    const distToTable = Math.hypot(clientX - cx, clientY - cy);
+    const rectMesa = mesa.getBoundingClientRect();
+    const centroX = rectMesa.left + rectMesa.width / 2;
+    const centroY = rectMesa.top + rectMesa.height / 2;
+    const distanciaMesa = Math.hypot(clientX - centroX, clientY - centroY);
 
-    if (distToTable < PAPER_PULL_RADIUS) {
-      setPapersAttracted(true);
-      const papers = table.querySelectorAll<HTMLElement>(".paper-piece");
-      papers.forEach((p, i) => {
+    if (distanciaMesa < RADIO_ATRACCION_PAPELITOS) {
+      definirPapelitosAtraidos(true);
+      const papelitos = mesa.querySelectorAll<HTMLElement>(".paper-piece");
+      papelitos.forEach((p, i) => {
         if (i % 2 !== 0) return;
         const pr = p.getBoundingClientRect();
         const px = pr.left + pr.width / 2;
@@ -83,112 +83,116 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
         const dy = clientY - py;
         const d  = Math.hypot(dx, dy) || 1;
 
-        const pull = Math.min(PAPER_MAX_PULL, (1 - d / PAPER_PULL_RADIUS) * PAPER_MAX_PULL);
-        const tx = (dx / d) * pull * PAPER_PULL_SMOOTH;
-        const ty = (dy / d) * pull * PAPER_PULL_SMOOTH;
+        const traccion = Math.min(ATRACCION_MAXIMA_PAPELITOS, (1 - d / RADIO_ATRACCION_PAPELITOS) * ATRACCION_MAXIMA_PAPELITOS);
+        const tx = (dx / d) * traccion * SUAVIZADO_ATRACCION_PAPELITOS;
+        const ty = (dy / d) * traccion * SUAVIZADO_ATRACCION_PAPELITOS;
 
         const rand = parseFloat(p.dataset.rand || "0");
         const jitter = (rand - 0.5) * 10;
-        const rot = (rand - 0.5) * PAPER_MAX_ROT;
-        const scl = 1 + (1 - Math.min(d / PAPER_PULL_RADIUS, 1)) * (PAPER_MAX_SCALE - 1) * 0.7;
+        const rot = (rand - 0.5) * ROTACION_MAXIMA_PAPELITOS;
+        const escala = 1 + (1 - Math.min(d / RADIO_ATRACCION_PAPELITOS, 1)) * (ESCALA_MAXIMA_PAPELITOS - 1) * 0.7;
 
         p.style.transition = "transform 0.18s ease-out";
-        p.style.transform = `translate(${tx + jitter}px, ${ty}px) rotate(${rot}deg) scale(${scl})`;
+        p.style.transform = `translate(${tx + jitter}px, ${ty}px) rotate(${rot}deg) scale(${escala})`;
       });
     } else {
-      setPapersAttracted(false);
-      resetPapersTransform();
+      definirPapelitosAtraidos(false);
+      restablecerTransformacionPapelitos();
     }
-  }, [balloons]);
+  }, [globos]);
 
-  // ====== drag ======
-  function handlePointerDown(e: React.PointerEvent, id: number) {
-    if (hasWon) return;
-    const target = e.currentTarget as HTMLDivElement;
-    const rect = target.getBoundingClientRect();
-    setOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-    setDraggingId(id);
-    target.setPointerCapture(e.pointerId);
-    setBalloons((prev) =>
-      prev.map((b) => (b.id === id ? b.withVelocity(Vector2.zero()).withRope(0).withFalling(false) : b)),
+  // ====== arrastre ======
+  function alPresionarGlobo(e: React.PointerEvent, id: number) {
+    if (gano) return;
+    const objetivo = e.currentTarget as HTMLDivElement;
+    const rect = objetivo.getBoundingClientRect();
+    definirDesplazamiento({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    definirIdArrastre(id);
+    objetivo.setPointerCapture(e.pointerId);
+    definirGlobos((prev) =>
+      prev.map((globo) => (globo.id === id ? globo.withVelocity(Vector2.zero()).withRope(0).withFalling(false) : globo)),
     );
   }
-  function handlePointerMove(e: React.PointerEvent, id: number) {
-    if (hasWon) return;
-    if (draggingId !== id) return;
-    const area = balloonsAreaRef.current;
-    if (!area) return;
-    const ar = area.getBoundingClientRect();
-    const nx = e.clientX - ar.left - offset.x;
-    const ny = e.clientY - ar.top - offset.y;
-    setBalloons((prev) => prev.map((b) => (b.id === id ? b.withPosition(new Vector2(nx, ny)) : b)));
-    maybeCharge(id, e.clientX, e.clientY);
-    updatePaperAttraction(id, e.clientX, e.clientY);
-  }
-  const finishDragAtClient = useCallback((id: number, clientX: number, clientY: number) => {
-    const area = balloonsAreaRef.current;
-    const table = centerTableRef.current;
-    if (!area) return;
-    const tr = table ? getLocalRect(table, area) : null;
 
-    setBalloons((prev) =>
-      prev.map((b) => {
-        if (b.id !== id) return b;
-        const resetVelocity = b.withVelocity(Vector2.zero());
-        if (tr) {
-          const topTouch = Math.abs(b.pos.y + BALLOON_H - tr.y) <= 8;
-          const overlapX = b.pos.x + BALLOON_W > tr.x && b.pos.x < tr.x + tr.w;
-          if (topTouch && overlapX) {
-            return resetVelocity
-              .withPosition(resetVelocity.pos.with({ y: tr.y - BALLOON_H }))
+  function alMoverGlobo(e: React.PointerEvent, id: number) {
+    if (gano) return;
+    if (idArrastre !== id) return;
+    const area = areaGlobosRef.current;
+    if (!area) return;
+    const rectArea = area.getBoundingClientRect();
+    const nuevoX = e.clientX - rectArea.left - desplazamiento.x;
+    const nuevoY = e.clientY - rectArea.top - desplazamiento.y;
+    definirGlobos((prev) => prev.map((globo) => (globo.id === id ? globo.withPosition(new Vector2(nuevoX, nuevoY)) : globo)));
+    intentarCargar(id, e.clientX, e.clientY);
+    actualizarAtraccionPapelitos(id, e.clientX, e.clientY);
+  }
+
+  const finalizarArrastreEnPantalla = useCallback((id: number, clientX: number, clientY: number) => {
+    const area = areaGlobosRef.current;
+    const mesa = mesaCentralRef.current;
+    if (!area) return;
+  const rectMesa = mesa ? obtenerRectanguloLocal(mesa, area) : null;
+
+    definirGlobos((prev) =>
+      prev.map((globo) => {
+        if (globo.id !== id) return globo;
+        const globoSinVelocidad = globo.withVelocity(Vector2.zero());
+        if (rectMesa) {
+          const tocaParteSuperior = Math.abs(globo.pos.y + ALTO_GLOBO - rectMesa.y) <= 8;
+          const solapaEjeX = globo.pos.x + ANCHO_GLOBO > rectMesa.x && globo.pos.x < rectMesa.x + rectMesa.w;
+          if (tocaParteSuperior && solapaEjeX) {
+            return globoSinVelocidad
+              .withPosition(globoSinVelocidad.pos.with({ y: rectMesa.y - ALTO_GLOBO }))
               .withFalling(false);
           }
         }
-        return resetVelocity.withFalling(true);
+        return globoSinVelocidad.withFalling(true);
       }),
     );
-    updatePaperAttraction(id, clientX, clientY);
-  }, [updatePaperAttraction]);
-  function handlePointerUp(e: React.PointerEvent, id: number) {
-    if (hasWon) return;
+    actualizarAtraccionPapelitos(id, clientX, clientY);
+  }, [actualizarAtraccionPapelitos]);
+
+  function alSoltarGlobo(e: React.PointerEvent, id: number) {
+    if (gano) return;
     try {
       (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId);
     } catch (error) {
-      console.error('Error liberando captura de puntero:', error);
+      console.error("Error liberando captura de puntero:", error);
     }
-    if (draggingId === id) setDraggingId(null);
-    finishDragAtClient(id, e.clientX, e.clientY);
+    if (idArrastre === id) definirIdArrastre(null);
+    finalizarArrastreEnPantalla(id, e.clientX, e.clientY);
   }
+
   useEffect(() => {
-    function onWinPointerUp(ev: PointerEvent) {
-      if (hasWon) return;
-      if (draggingId == null) return;
-      finishDragAtClient(draggingId, ev.clientX, ev.clientY);
-      setDraggingId(null);
+    function alSoltarGlobal(ev: PointerEvent) {
+      if (gano) return;
+      if (idArrastre == null) return;
+      finalizarArrastreEnPantalla(idArrastre, ev.clientX, ev.clientY);
+      definirIdArrastre(null);
     }
-    window.addEventListener("pointerup", onWinPointerUp);
-    return () => window.removeEventListener("pointerup", onWinPointerUp);
-  }, [draggingId, hasWon, finishDragAtClient]);
+    window.addEventListener("pointerup", alSoltarGlobal);
+    return () => window.removeEventListener("pointerup", alSoltarGlobal);
+  }, [idArrastre, gano, finalizarArrastreEnPantalla]);
 
   // ====== carga por fricción ======
-  function maybeCharge(id: number, clientX: number, clientY: number) {
-    if (hasWon) return;
-    const hair = hairRef.current;
-    if (!hair) return;
-    const hr = hair.getBoundingClientRect();
-    const inside = clientX >= hr.left && clientX <= hr.right && clientY >= hr.top && clientY <= hr.bottom;
-    if (inside) {
-      let becameCharged = false;
-      setBalloons(prev => prev.map(b => {
-        if (b.id !== id) return b;
-        if (b.charged) return b.ensureElectrons(makeElectrons);
-        becameCharged = true;
-        return b.withCharged(true, makeElectrons);
+  function intentarCargar(id: number, clientX: number, clientY: number) {
+    if (gano) return;
+    const cabello = cabelloRef.current;
+    if (!cabello) return;
+    const rectCabello = cabello.getBoundingClientRect();
+    const dentroDelCabello = clientX >= rectCabello.left && clientX <= rectCabello.right && clientY >= rectCabello.top && clientY <= rectCabello.bottom;
+    if (dentroDelCabello) {
+      let seCargo = false;
+      definirGlobos(prev => prev.map(globo => {
+        if (globo.id !== id) return globo;
+  if (globo.charged) return globo.ensureElectrons(generarElectrones);
+        seCargo = true;
+  return globo.withCharged(true, generarElectrones);
       }));
-      if (becameCharged && !chargedShown.current) chargedShown.current = true;
+      if (seCargo && !cargaMostradaRef.current) cargaMostradaRef.current = true;
 
-      hair.classList.add("animate-wiggle");
-      setTimeout(() => hair.classList.remove("animate-wiggle"), 520);
+      cabello.classList.add("animate-wiggle");
+      setTimeout(() => cabello.classList.remove("animate-wiggle"), 520);
 
       // chispas
       for (let i = 0; i < 8; i++) {
@@ -206,150 +210,153 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
   }
 
   useEffect(() => {
-    const table = papersTableRef.current;
-    if (!table) return;
-    const papers = table.querySelectorAll<HTMLElement>(".paper-piece");
-    papers.forEach((p) => { if (!p.dataset.rand) p.dataset.rand = Math.random().toFixed(3); });
+    const mesa = mesaPapelitosRef.current;
+    if (!mesa) return;
+    const papelitos = mesa.querySelectorAll<HTMLElement>(".paper-piece");
+    papelitos.forEach((p) => { if (!p.dataset.rand) p.dataset.rand = Math.random().toFixed(3); });
   }, []);
 
   // ===== victoria =====
   useEffect(() => {
-    if (hasWon || !allCharged) return;
+    if (gano || !todosCargados) return;
 
-    setHasWon(true);
-    if (!exitoNotificado.current) {
-      exitoNotificado.current = true;
-      onExitoRef.current?.();
+    definirGano(true);
+    if (!exitoNotificadoRef.current) {
+      exitoNotificadoRef.current = true;
+      alExitoRef.current?.();
     }
-    setFeedback({
-      title: "¡Felicitaciones! 🎉",
-      body:
+    definirModal({
+      titulo: "¡Felicitaciones! 🎉",
+      cuerpo:
         "¡Cargaste los cuatro globos por fricción!\n\nEl tiempo quedó registrado. Usa «Reiniciar» si deseas intentarlo de nuevo.",
     });
-  }, [allCharged, hasWon]);
+  }, [todosCargados, gano]);
 
   // ===== física =====
   useEffect(() => {
-    let raf = 0, t = 0;
-    const step = () => {
-      const area = balloonsAreaRef.current;
-      const tableEl = centerTableRef.current;
-      if (!area || !tableEl) { raf = requestAnimationFrame(step); return; }
+    let idAnimacion = 0, tiempo = 0;
+    const paso = () => {
+      const area = areaGlobosRef.current;
+      const mesaElemento = mesaCentralRef.current;
+      if (!area || !mesaElemento) { idAnimacion = requestAnimationFrame(paso); return; }
 
-      const tr = getLocalRect(tableEl, area)!;
-      const minX = tr.x;
-      const maxX = tr.x + tr.w - BALLOON_W;
-      const minY = tr.y;
-      const maxY = tr.y + tr.h - BALLOON_H;
+  const rectMesa = obtenerRectanguloLocal(mesaElemento, area)!;
+      const minimoX = rectMesa.x;
+  const maximoX = rectMesa.x + rectMesa.w - ANCHO_GLOBO;
+  const minimoY = rectMesa.y;
+  const maximoY = rectMesa.y + rectMesa.h - ALTO_GLOBO;
 
-      setBalloons((prev) => {
-        const fx: number[] = new Array(prev.length).fill(0);
-        const fy: number[] = new Array(prev.length).fill(0);
+      definirGlobos((prev) => {
+        const fuerzasX: number[] = new Array(prev.length).fill(0);
+        const fuerzasY: number[] = new Array(prev.length).fill(0);
 
         for (let i = 0; i < prev.length; i++) {
-          const bi = prev[i];
-          if (!bi.charged) continue;
+          const globoA = prev[i];
+          if (!globoA.charged) continue;
           for (let j = i + 1; j < prev.length; j++) {
-            const bj = prev[j];
-            if (!bj.charged) continue;
-            const dx = bi.pos.x - bj.pos.x;
-            const dy = bi.pos.y - bj.pos.y;
-            const d2 = dx * dx + dy * dy + 60;
-            const d  = Math.sqrt(d2);
-            const f  = Math.min(MAX_REPEL_STEP, K_REPEL / d2);
-            const nx = dx / d, ny = dy / d;
-            fx[i] += nx * f; fy[i] += ny * f;
-            fx[j] -= nx * f; fy[j] -= ny * f;
+            const globoB = prev[j];
+            if (!globoB.charged) continue;
+            const dx = globoA.pos.x - globoB.pos.x;
+            const dy = globoA.pos.y - globoB.pos.y;
+            const distanciaCuadrada = dx * dx + dy * dy + 60;
+            const distancia = Math.sqrt(distanciaCuadrada);
+            const fuerza = Math.min(PASO_MAXIMO_REPELENCIA, COEFICIENTE_REPELENCIA / distanciaCuadrada);
+            const normalX = dx / distancia;
+            const normalY = dy / distancia;
+            fuerzasX[i] += normalX * fuerza;
+            fuerzasY[i] += normalY * fuerza;
+            fuerzasX[j] -= normalX * fuerza;
+            fuerzasY[j] -= normalY * fuerza;
           }
         }
 
-        const electronRx = BALLOON_W * 0.32;
-        const electronRy = BALLOON_H * 0.38;
+  const radioElectronX = ANCHO_GLOBO * 0.32;
+  const radioElectronY = ALTO_GLOBO * 0.38;
 
-        return prev.map((b, index) => {
-          const base = b.charged ? b.ensureElectrons(makeElectrons) : b.withElectrons([]);
+        return prev.map((globo, indice) => {
+          const base = globo.charged ? globo.ensureElectrons(generarElectrones) : globo.withElectrons([]);
 
-          if (draggingId === base.id || hasWon) {
-            const rope = base.rope + ((Math.max(-14, Math.min(14, -0.9 * base.vel.x)) - base.rope) * 0.2);
-            return base.withRope(rope).stepElectrons(electronRx, electronRy);
+          if (idArrastre === base.id || gano) {
+            const cuerda = base.rope + ((Math.max(-14, Math.min(14, -0.9 * base.vel.x)) - base.rope) * 0.2);
+            return base.withRope(cuerda).stepElectrons(radioElectronX, radioElectronY);
           }
 
           let x = base.pos.x;
           let y = base.pos.y;
-          let vx = base.vel.x;
-          let vy = base.vel.y;
-          let falling = base.falling;
+          let velocidadX = base.vel.x;
+          let velocidadY = base.vel.y;
+          let cayendo = base.falling;
 
-          const enMesa = onTopOfTable(base, tr);
-          if (!enMesa && y < maxY) falling = true;
+          const sobreMesa = globoSobreMesa(base, rectMesa);
+          if (!sobreMesa && y < maximoY) cayendo = true;
 
-          vy += base.charged ? GRAVITY_CHARGED : GRAVITY_BASE;
+          velocidadY += base.charged ? GRAVEDAD_CARGADO : GRAVEDAD_BASE;
 
           if (base.charged) {
-            vx += 0.02 * Math.cos(t * 0.12 + base.id * 1.7);
-            vy -= 0.015 * Math.sin(t * 0.15 + base.id * 2.1);
-            vx += fx[index] || 0;
-            vy += fy[index] || 0;
+            velocidadX += 0.02 * Math.cos(tiempo * 0.12 + base.id * 1.7);
+            velocidadY -= 0.015 * Math.sin(tiempo * 0.15 + base.id * 2.1);
+            velocidadX += fuerzasX[indice] || 0;
+            velocidadY += fuerzasY[indice] || 0;
           }
 
-          if (vy > 0) {
-            const hitsX = x + BALLOON_W > minX && x < maxX + BALLOON_W;
-            const bottom = y + BALLOON_H;
-            if (hitsX && bottom >= minY && bottom <= minY + 10) {
-              y = minY - BALLOON_H;
-              vy = 0;
-              vx *= 0.82;
-              falling = false;
+          if (velocidadY > 0) {
+            const golpeaX = x + ANCHO_GLOBO > minimoX && x < maximoX + ANCHO_GLOBO;
+            const bordeInferior = y + ALTO_GLOBO;
+            if (golpeaX && bordeInferior >= minimoY && bordeInferior <= minimoY + 10) {
+              y = minimoY - ALTO_GLOBO;
+              velocidadY = 0;
+              velocidadX *= 0.82;
+              cayendo = false;
             }
           }
 
-          if (y >= maxY) {
-            y = maxY;
-            vy = -vy * BOUNCE;
-            if (Math.abs(vy) < 0.7) vy = 0;
-            if (Math.abs(vx) < 0.1) vx = 0;
+          if (y >= maximoY) {
+            y = maximoY;
+            velocidadY = -velocidadY * REBOTE;
+            if (Math.abs(velocidadY) < 0.7) velocidadY = 0;
+            if (Math.abs(velocidadX) < 0.1) velocidadX = 0;
           }
-          if (x <= minX) { x = minX; vx = -vx * WALL_BOUNCE; }
-          if (x >= maxX) { x = maxX; vx = -vx * WALL_BOUNCE; }
-          if (y <  minY) { y = minY; vy = -vy * BOUNCE; }
+          if (x <= minimoX) { x = minimoX; velocidadX = -velocidadX * REBOTE_PARED; }
+          if (x >= maximoX) { x = maximoX; velocidadX = -velocidadX * REBOTE_PARED; }
+          if (y <  minimoY) { y = minimoY; velocidadY = -velocidadY * REBOTE; }
 
-          vx *= AIR_FRICTION;
-          vy *= AIR_FRICTION;
+          velocidadX *= FRICCION_AIRE;
+          velocidadY *= FRICCION_AIRE;
 
-          const rope = base.rope + ((Math.max(-14, Math.min(14, -0.9 * vx + 1.2 * Math.sin(t * 0.08 + base.id))) - base.rope) * 0.15);
+          const cuerda = base.rope + ((Math.max(-14, Math.min(14, -0.9 * velocidadX + 1.2 * Math.sin(tiempo * 0.08 + base.id))) - base.rope) * 0.15);
 
           return base
             .withPosition(new Vector2(x, y))
-            .withVelocity(new Vector2(vx, vy))
-            .withFalling(falling)
-            .withRope(rope)
-            .stepElectrons(electronRx, electronRy);
+            .withVelocity(new Vector2(velocidadX, velocidadY))
+            .withFalling(cayendo)
+            .withRope(cuerda)
+            .stepElectrons(radioElectronX, radioElectronY);
         });
       });
 
-      t += 1;
-      raf = requestAnimationFrame(step);
+      tiempo += 1;
+      idAnimacion = requestAnimationFrame(paso);
     };
 
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [draggingId, hasWon]);
+    idAnimacion = requestAnimationFrame(paso);
+    return () => cancelAnimationFrame(idAnimacion);
+  }, [idArrastre, gano]);
 
   // ===== layout inicial =====
-  const resetGame = useCallback(() => {
-    const area = balloonsAreaRef.current;
-    const table = centerTableRef.current;
-    if (!area || !table) return;
+  const restablecerJuego = useCallback(() => {
+    const area = areaGlobosRef.current;
+    const mesa = mesaCentralRef.current;
+    if (!area || !mesa) return;
 
-    const tr = getLocalRect(table, area)!;
-    const cols = 4;
-    const spacing = tr.w / (cols + 1);
+  const rectMesa = obtenerRectanguloLocal(mesa, area)!;
+    const columnas = 4;
+    const separacion = rectMesa.w / (columnas + 1);
 
-    setBalloons((prev) =>
-      prev.map((b, i) => {
-        const x = tr.x + spacing * (i + 1) - BALLOON_W / 2;
-        const y = tr.y - BALLOON_H - 2;
-        return b
+    definirGlobos((prev) =>
+      prev.map((globo, indice) => {
+  const x = rectMesa.x + separacion * (indice + 1) - ANCHO_GLOBO / 2;
+  const y = rectMesa.y - ALTO_GLOBO - 2;
+        return globo
           .withCharged(false)
           .withVelocity(Vector2.zero())
           .withPosition(new Vector2(x, y))
@@ -358,39 +365,39 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
       }),
     );
 
-    setHasWon(false);
-    setPapersAttracted(false);
-    resetPapersTransform();
+    definirGano(false);
+    definirPapelitosAtraidos(false);
+    restablecerTransformacionPapelitos();
 
     setTimeout(() => {
-      setFeedback({
-        title: "👋 ¡Bienvenido!",
-        body: "Objetivo: carga los cuatro globos por fricción y luego atrae los papelitos.\n\n1) Frota cada globo con el cabello.\n2) Cuando todos estén cargados, acércalos a los papelitos.\n3) ¡Haz que los papelitos se muevan para ganar!",
+      definirModal({
+        titulo: "👋 ¡Bienvenido!",
+        cuerpo: "Objetivo: carga los cuatro globos por fricción y luego atrae los papelitos.\n\n1) Frota cada globo con el cabello.\n2) Cuando todos estén cargados, acércalos a los papelitos.\n3) ¡Haz que los papelitos se muevan para ganar!",
       });
     }, 50);
   }, []);
 
-  useEffect(() => { setTimeout(() => resetGame(), 0); }, [resetGame]);
+  useEffect(() => { setTimeout(() => restablecerJuego(), 0); }, [restablecerJuego]);
 
   // ===== UI =====
   return (
     <div
-      ref={gameRef}
+      ref={juegoRef}
       className="w-full relative flex flex-col bg-gradient-to-br from-indigo-400 to-purple-700 overflow-hidden rounded-xl"
       style={{ minHeight: "80vh" }}
     >
       <Link to="/menu" className="absolute top-4 left-4 z-50 px-4 py-3 rounded-xl bg-white/20 text-white font-extrabold text-xl md:text-2xl hover:bg-white/30">← Menú</Link>
       <div className="absolute top-4 right-4 z-50 px-4 py-3 rounded-xl bg-white/20 text-white font-bold text-base md:text-lg backdrop-blur">
-        🔋 Globos cargados: {chargedCount}/{totalBalloons}
+        🔋 Globos cargados: {globosCargados}/{totalGlobos}
       </div>
 
       <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 p-6 relative">
         {/* Columna 1: Persona */}
-        <PersonHair hairRef={hairRef as React.RefObject<HTMLDivElement>} disabled={hasWon} />
+        <PersonHair hairRef={cabelloRef as React.RefObject<HTMLDivElement>} disabled={gano} />
 
         {/* Columna 3: Papelitos */}
         <div className="flex flex-col items-center md:items-end md:col-start-3 md:justify-self-end md:place-self-end md:mr-6 gap-4">
-          <div ref={papersTableRef} className="relative w-full max-w-[450px] h-[100px] bg-amber-800 rounded-lg shadow-lg">
+          <div ref={mesaPapelitosRef} className="relative w-full max-w-[450px] h-[100px] bg-amber-800 rounded-lg shadow-lg">
             <div className="absolute left-5 -bottom-10 w-2 h-10 bg-amber-900" />
             <div className="absolute right-5 -bottom-10 w-2 h-10 bg-amber-900" />
             <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-[100px] flex flex-wrap gap-1 justify-center">
@@ -401,7 +408,7 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
                   style={{
                     transition: "transform 0.35s ease",
                     willChange: "transform",
-                    animation: !papersAttracted ? "paperFloat 2.4s ease-in-out infinite" : "none",
+                    animation: !papelitosAtraidos ? "paperFloat 2.4s ease-in-out infinite" : "none",
                   }}
                 />
               ))}
@@ -413,9 +420,9 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
         </div>
 
         {/* Área central con mesa + globos (ocupa las 3 columnas) */}
-        <div ref={balloonsAreaRef} className="relative md:col-span-3 rounded-xl overflow-visible" style={{ height: "36vh" }}>
+        <div ref={areaGlobosRef} className="relative md:col-span-3 rounded-xl overflow-visible" style={{ height: "36vh" }}>
           <div
-            ref={centerTableRef}
+            ref={mesaCentralRef}
             className="absolute left-1/2 -translate-x-1/2"
             style={{
               bottom: 110, width: "calc(100% - 96px)", maxWidth: "1500px", height: "110px",
@@ -430,25 +437,25 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
             <div className="absolute inset-x-0 top-0 h-3 rounded-t-2xl bg-amber-700/40 pointer-events-none" />
           </div>
 
-          {balloons.map((b) => (
+          {globos.map((globo) => (
             <div
-              key={b.id}
-              onPointerDown={(e) => handlePointerDown(e, b.id)}
-              onPointerMove={(e) => handlePointerMove(e, b.id)}
-              onPointerUp={(e) => handlePointerUp(e, b.id)}
+              key={globo.id}
+              onPointerDown={(e) => alPresionarGlobo(e, globo.id)}
+              onPointerMove={(e) => alMoverGlobo(e, globo.id)}
+              onPointerUp={(e) => alSoltarGlobo(e, globo.id)}
               className="absolute z-10 cursor-grab active:cursor-grabbing select-none"
-              style={{ left: b.pos.x, top: b.pos.y, width: BALLOON_W, height: BALLOON_H, touchAction: "none", pointerEvents: hasWon ? "none" : "auto" }}
-              title={b.charged ? "Cargado" : "Arrástrame"}
+              style={{ left: globo.pos.x, top: globo.pos.y, width: ANCHO_GLOBO, height: ALTO_GLOBO, touchAction: "none", pointerEvents: gano ? "none" : "auto" }}
+              title={globo.charged ? "Cargado" : "Arrástrame"}
             >
               {/* Cuerda */}
               <div
                 style={{
                   position: "absolute",
-                  left: BALLOON_W / 2 + b.rope,
-                  top: BALLOON_H - 2,
+                  left: ANCHO_GLOBO / 2 + globo.rope,
+                  top: ALTO_GLOBO - 2,
                   transform: "translateX(-50%)",
                   width: 3,
-                  height: ROPE_LEN,
+                  height: LARGO_CUERDA,
                   background: "#111827",
                   borderRadius: "999px",
                   pointerEvents: "none",
@@ -457,8 +464,8 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
               <div
                 style={{
                   position: "absolute",
-                  left: BALLOON_W / 2 + b.rope,
-                  top: BALLOON_H - 2 + ROPE_LEN - 2,
+                  left: ANCHO_GLOBO / 2 + globo.rope,
+                  top: ALTO_GLOBO - 2 + LARGO_CUERDA - 2,
                   transform: "translateX(-50%)",
                   width: 8,
                   height: 6,
@@ -470,19 +477,19 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
 
               {/* Globo */}
               <div
-                className={`relative transition-transform ${draggingId === b.id ? "scale-105" : b.charged ? "animate-balloonWobble" : ""}`}
+                className={`relative transition-transform ${idArrastre === globo.id ? "scale-105" : globo.charged ? "animate-balloonWobble" : ""}`}
                 style={{
                   width: "100%", height: "100%", borderRadius: "50% / 55%",
-                  background: `radial-gradient(120% 120% at 30% 25%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 10%, ${b.color} 60%, ${b.color} 100%)`,
-                  boxShadow: b.charged ? "0 0 22px rgba(255,255,0,0.85), inset 0 -8px 14px rgba(0,0,0,0.15)"
+                  background: `radial-gradient(120% 120% at 30% 25%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 10%, ${globo.color} 60%, ${globo.color} 100%)`,
+                  boxShadow: globo.charged ? "0 0 22px rgba(255,255,0,0.85), inset 0 -8px 14px rgba(0,0,0,0.15)"
                                     : "inset 0 -8px 14px rgba(0,0,0,0.15)",
-                  filter: b.charged ? "saturate(1.08) contrast(1.05)" : "none",
+                  filter: globo.charged ? "saturate(1.08) contrast(1.05)" : "none",
                 }}
               >
-                {b.charged && b.electrons.map((e, i) => (
-                  <div key={i} style={{
-                    position: "absolute", left: e.x - e.size / 2, top: e.y - e.size / 2,
-                    width: e.size, height: e.size, borderRadius: "50%",
+                {globo.charged && globo.electrons.map((electron, indiceElectron) => (
+                  <div key={indiceElectron} style={{
+                    position: "absolute", left: electron.x - electron.size / 2, top: electron.y - electron.size / 2,
+                    width: electron.size, height: electron.size, borderRadius: "50%",
                     background: "radial-gradient(circle at 30% 30%, #a5d8ff 0%, #60a5fa 40%, #2563eb 100%)",
                     boxShadow: "0 0 6px rgba(96,165,250,.9)", opacity: 0.95,
                   }}/>
@@ -497,19 +504,19 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
 
       {/* Botonera flotante */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex gap-3 bg-white/10 p-4 rounded-xl backdrop-blur-md z-[100]">
-        <button onClick={resetGame} className="px-4 py-2 rounded-lg font-bold text-white bg-rose-500 hover:bg-rose-600 transition">🔄 Reiniciar</button>
-        <button onClick={() => setFeedback({ title: "📖 Manual", body: "1) Frota el globo con el cabello.\n2) Acércalo a los papelitos." })} className="px-4 py-2 rounded-lg font-bold text-white bg-amber-500 hover:bg-amber-600 transition">📖 Manual</button>
+        <button onClick={restablecerJuego} className="px-4 py-2 rounded-lg font-bold text-white bg-rose-500 hover:bg-rose-600 transition">🔄 Reiniciar</button>
+        <button onClick={() => definirModal({ titulo: "📖 Manual", cuerpo: "1) Frota el globo con el cabello.\n2) Acércalo a los papelitos." })} className="px-4 py-2 rounded-lg font-bold text-white bg-amber-500 hover:bg-amber-600 transition">📖 Manual</button>
       </div>
 
       {/* Modal */}
-      {feedback && (
+      {modal && (
         <div className="fixed inset-0 grid place-items-center p-4 z-[120]">
           <div className="absolute inset-0 bg-black/40" />
           <div className="relative bg-white text-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-lg">
-            <h3 className="text-xl font-extrabold mb-2">{feedback.title}</h3>
-            <p className="mb-4 whitespace-pre-line">{feedback.body}</p>
+            <h3 className="text-xl font-extrabold mb-2">{modal.titulo}</h3>
+            <p className="mb-4 whitespace-pre-line">{modal.cuerpo}</p>
             <div className="text-right">
-              <button onClick={() => setFeedback(null)} className="px-4 py-2 rounded-lg font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition">Continuar</button>
+              <button onClick={() => definirModal(null)} className="px-4 py-2 rounded-lg font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition">Continuar</button>
             </div>
           </div>
         </div>

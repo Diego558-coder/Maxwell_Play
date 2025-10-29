@@ -1,5 +1,5 @@
-import axios from 'axios';
-import type { AxiosRequestConfig } from 'axios';
+import axios from "axios";
+import type { AxiosRequestConfig } from "axios";
 
 const baseURL = import.meta.env.VITE_API_BASE ?? "https://maxwellplay-production.up.railway.app";
 
@@ -22,7 +22,7 @@ export type Usuario = {
   rol: "DOCENTE" | "ESTUDIANTE";
 };
 
-export type LoginResp = {
+export type RespuestaInicioSesion = {
   token: string;
   usuario: Usuario;
 };
@@ -30,21 +30,21 @@ export type LoginResp = {
 export type ReglaPieza = { tipo_pieza: string; minimo: number; maximo: number; };
 export type UmbralesJuego = { oro_seg: number; plata_seg: number; bronce_seg: number; };
 
-export const login = async (correo: string, contrasenia: string) => {
-  const { data } = await api.post<LoginResp>("/auth/login", { correo, contrasenia });
+export const inicioSesion = async (correo: string, contrasenia: string) => {
+  const { data } = await api.post<RespuestaInicioSesion>("/auth/inicio-sesion", { correo, contrasenia });
   localStorage.setItem("token", data.token);
   localStorage.setItem("usuario", JSON.stringify(data.usuario));
   return data;
 };
 
-export const getReglas = async (idJuego: number) => {
+export const obtenerReglas = async (idJuego: number) => {
   const { data } = await api.get<{ reglas: ReglaPieza[]; umbrales: UmbralesJuego | null }>(
     `/juegos/${idJuego}/reglas`
   );
   return data;
 };
 
-export const postProgreso = async (
+export const registrarProgreso = async (
   idJuego: number,
   payload: { tiempo_seg: number; completado: 0 | 1 | boolean; medalla?: "ORO" | "PLATA" | "BRONCE"; id_estudiante?: number }
 ) => {
@@ -53,11 +53,11 @@ export const postProgreso = async (
   return data;
 };
 
-export const resetProgreso = async () => {
+export const reiniciarProgreso = async () => {
   const { data } = await api.delete<{ msg: string }>("/juegos/progreso");
   return data;
 };
 
-export const apiCall = (config: AxiosRequestConfig) => api(config);
+export const realizarLlamadaApi = (config: AxiosRequestConfig) => api(config);
 
 export default api;
