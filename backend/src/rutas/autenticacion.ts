@@ -4,9 +4,7 @@ import { poolConexiones } from "../bd";
 
 const rutasAutenticacion = Router();
 
-/**
- * Maneja el inicio de sesión tradicional de estudiantes y docentes.
- */
+
 async function manejarInicioSesion(req: Request, res: Response) {
   const { correo, contrasenia } = req.body || {};
   if (!correo || !contrasenia) {
@@ -37,9 +35,7 @@ async function manejarInicioSesion(req: Request, res: Response) {
   return res.json({ token, usuario });
 }
 
-/**
- * Maneja el registro de nuevos usuarios.
- */
+
 async function manejarRegistro(req: Request, res: Response) {
   const { nombre, correo, contrasenia } = req.body || {};
   if (!nombre || !correo || !contrasenia) {
@@ -47,7 +43,7 @@ async function manejarRegistro(req: Request, res: Response) {
   }
 
   try {
-    // Verificar si el correo ya está registrado
+    
     const [usuariosExistentes] = await poolConexiones.query(
       "SELECT id_usuario FROM Usuario WHERE correo = ? LIMIT 1",
       [correo]
@@ -56,7 +52,7 @@ async function manejarRegistro(req: Request, res: Response) {
       return res.status(409).json({ msg: "El correo ya está registrado" });
     }
 
-    // Insertar el nuevo usuario
+    
     const [resultado] = await poolConexiones.query(
       "INSERT INTO Usuario (nombre, correo, contrasenia, rol, activo) VALUES (?, ?, MD5(?), 'ESTUDIANTE', 1)",
       [nombre, correo, contrasenia]
@@ -64,7 +60,7 @@ async function manejarRegistro(req: Request, res: Response) {
 
     const id_usuario = (resultado as { insertId: number }).insertId;
 
-    // Crear ficha del estudiante (código ALU-####)
+    
     const codigo = `ALU-${String(id_usuario).padStart(4, "0")}`;
     await poolConexiones.query(
       "INSERT INTO Estudiante (id_estudiante, codigo, grado) VALUES (?, ?, NULL)",

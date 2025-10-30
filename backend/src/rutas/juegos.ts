@@ -4,10 +4,7 @@ import { requerirAutenticacion } from "../intermedios/requerirAutenticacion";
 
 const rutasJuegos = Router();
 
-/**
- * GET /juegos/:id/reglas
- * Lee Reglas y Umbrales para que el front valide el minijuego.
- */
+
 rutasJuegos.get("/:id/reglas", requerirAutenticacion, async (req, res) => {
   const id = Number(req.params.id);
   if (!id) return res.status(400).json({ msg: "id inválido" });
@@ -28,11 +25,7 @@ rutasJuegos.get("/:id/reglas", requerirAutenticacion, async (req, res) => {
   });
 });
 
-/**
- * POST /juegos/:id/progreso
- * Body: { tiempo_seg: number, completado: 0|1, medalla?: 'ORO'|'PLATA'|'BRONCE' }
- * Lógica: guardar SOLO si mejora mejor_tiempo o mejor_medalla.
- */
+
 rutasJuegos.post("/:id/progreso", requerirAutenticacion, async (req, res) => {
   const id_juego = Number(req.params.id);
   const { tiempo_seg, medalla, completado } = req.body || {};
@@ -51,7 +44,7 @@ rutasJuegos.post("/:id/progreso", requerirAutenticacion, async (req, res) => {
   const now = new Date();
   const inicio = new Date(now.getTime() - tiempo * 1000);
 
-  // Asegurar que exista el registro en Estudiante (por bases legacy sin seed actualizado)
+  
   const codigo = `ALU-${String(user.id_usuario).padStart(4, "0")}`;
   await poolConexiones.query(
     "INSERT IGNORE INTO Estudiante (id_estudiante, codigo, grado) VALUES (?, ?, '7°')",

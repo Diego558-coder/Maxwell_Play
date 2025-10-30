@@ -1,4 +1,4 @@
-// src/games/gauss-magnetico/index.tsx
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { JuegoGaussMagnetico } from "./modelos";
@@ -6,7 +6,7 @@ import type { ConfiguracionVagon, EstadoAcoples } from "./modelos";
 import { CLAVE_JUEGO, ID_JUEGO, RUTA_VIDEO_EXPLICACION } from "./constants";
 import "./gauss.css";
 
-// Banco inicial (igual al tuyo)
+
 const bancoInicial: ConfiguracionVagon[] = [
   { id: 1, poloIzquierdo: "S", poloDerecho: "N" },
   { id: 2, poloIzquierdo: "S", poloDerecho: "N" },
@@ -118,7 +118,7 @@ export default function EscenaJuegoGaussMagnetico({ alGanar }: { alGanar?: () =>
       <div className="game" id="game">
         <div className="tip">Haz clic en un vagón y luego en una casilla. Al completar 4 correctos (sin huecos y N–S), el tren avanza.</div>
 
-        {/* Panel de vagones */}
+        {}
         <div className="panel">
           <h3>Vagones</h3>
           <div className="bank" id="bank">

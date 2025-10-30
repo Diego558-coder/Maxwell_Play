@@ -2,12 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { registrarProgreso } from "@/lib/api";
 import { marcarCompletado } from "../lib/progreso";
 
-// slug -> idJuego (ajústalo con los que tengas)
+
 const MAPEO_ID: Record<string, number> = {
   "microondas": 1,
-  // "carga-electrica": 2,
-  // "gauss-magnetico": 3,
-  // ...
+  
+  
+  
 };
 
 export default function JuegoIframe({ slug }: { slug: string }) {

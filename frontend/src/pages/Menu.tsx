@@ -9,7 +9,7 @@ type Card = {
   icon: string;
   formula: string;
   grad: string;
-  gameId: string; // <- usamos slug obligatorio
+  gameId: string; 
   path: string;
 };
 

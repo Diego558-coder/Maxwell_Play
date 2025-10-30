@@ -5,7 +5,7 @@ import { useReglasDelJuego } from "@/hooks/useReglasDelJuego";
 import { registrarProgreso } from "@/lib/api";
 import { marcarCompletado } from "../../lib/progreso";
 
-const ID_JUEGO = 2;           // el de MySQL
+const ID_JUEGO = 2;           
 const ETIQUETA_URL = "carga-electrica";
 
 export default function JuegoCargaElectrica() {

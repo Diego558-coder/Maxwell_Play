@@ -45,18 +45,18 @@ body{overflow:hidden}
   position:absolute;
   bottom:180px;
 
-  /* 👇 Ajustes que ya teníamos */
+  
   width:min(1200px, 86vw);
   display:flex;
   align-items:center;
   gap:8px;
 
-  /* 👇 Empuja el tren un poco a la derecha */
+  
   left: calc(75% + 8vw);
   transform: translateX(-50%);
 }
 
-/* En pantallas pequeñas no lo empujes (que quede centrado) */
+
 @media (max-width:900px){
   .train-area{
     left: 50%;
@@ -130,7 +130,7 @@ body{overflow:hidden}
 .modal .card h3{ font-size:1.25rem; font-weight:800; margin-bottom:8px; }
 .modal .card p{ margin:6px 0 14px; font-weight:600; }
 .modal .card .btn.ok{ background:#27ae60; }
-/* Selección de vagón (modo clic) */
+
 .car.selected{ outline:3px solid rgba(255,255,255,.9); transform:scale(1.02); }
 @media (max-width:900px){
   .title{font-size:1.4rem}

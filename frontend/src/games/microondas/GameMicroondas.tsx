@@ -1,4 +1,4 @@
-// src/games/microondas/GameMicroondas.tsx
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useReglasDelJuego } from "@/hooks/useReglasDelJuego";
@@ -6,7 +6,7 @@ import { registrarProgreso } from "@/lib/api";
 import { marcarCompletado } from "../../lib/progreso";
 import GameAmpereMaxwellScene from "./index.tsx";
 
-const ID_JUEGO = 1; // id registrado en la tabla Minijuego
+const ID_JUEGO = 1; 
 const LOCAL_KEY = "ampere-maxwell";
 
 type Umbrales = { oro_seg: number; plata_seg: number; bronce_seg: number };
@@ -18,7 +18,7 @@ export default function GameMicroondas() {
   const timerRef = useRef<number | null>(null);
   const navigate = useNavigate();
 
-  // umbrales desde backend
+  
   const { umbrales } = useReglasDelJuego(ID_JUEGO);
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function GameMicroondas() {
   }
 
   async function onExitoJuego() {
-    // detener cronómetro y registrar progreso
+    
     setRunning(false);
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     const medalla = medallaPorTiempo(seg);

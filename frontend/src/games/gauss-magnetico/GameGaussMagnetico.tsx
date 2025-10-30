@@ -1,4 +1,4 @@
-// src/games/gauss-magnetico/GameGaussMagnetico.tsx
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useReglasDelJuego } from "@/hooks/useReglasDelJuego";

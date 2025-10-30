@@ -12,7 +12,7 @@ export default function InicioSesion() {
     e.preventDefault();
   const ok = await iniciarSesion(correo, contrasenia);
     if (!ok) return;
-    // Redirigir según el rol almacenado en localStorage tras el login
+    
     try {
       const raw = localStorage.getItem("usuario");
       const u = raw ? JSON.parse(raw) as { rol?: string } : null;
@@ -28,13 +28,13 @@ export default function InicioSesion() {
 
   return (
   <div className="min-h-screen w-screen gradient-login flex items-center justify-center px-4 py-10">
-      {/* Cabecera con logo */}
+      {}
       <style>{`
         .gradient-login { background: linear-gradient(135deg,#667eea 0%, #764ba2 100%); }
       `}</style>
 
   <div className="w-full max-w-sm md:max-w-md">
-        {/* Encabezado */}
+        {}
         <div className="text-center mb-6">
           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
             <svg className="w-8 h-8 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
@@ -44,9 +44,9 @@ export default function InicioSesion() {
           <h1 className="text-3xl font-extrabold text-white drop-shadow">Iniciar sesión</h1>
         </div>
 
-        {/* Tarjeta */}
+        {}
         <div className="bg-white rounded-2xl p-6 shadow-xl space-y-5">
-          {/* Usuario registrado */}
+          {}
           <div className="border-2 border-gray-100 rounded-xl p-5 hover:border-indigo-200 transition-colors">
             <div className="flex items-center mb-3">
               <div className="w-11 h-11 bg-indigo-100 rounded-lg grid place-items-center mr-3">
@@ -78,9 +78,9 @@ export default function InicioSesion() {
               </button>
             </form>
           </div>
-          {/* Fin tarjeta */}
+          {}
         </div>
-        {/* Enlace para registro de usuarios */}
+        {}
           <div className="text-center mt-4">
             <p className="text-base">
   <span className="text-black">¿No tienes cuenta? </span>

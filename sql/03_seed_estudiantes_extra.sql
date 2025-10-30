@@ -1,6 +1,6 @@
 USE maxwellplay;
 
--- Crear estudiantes extra (idempotente)
+
 INSERT IGNORE INTO Usuario (nombre, correo, contrasenia, rol)
 VALUES
 ('Estudiante Demo 2','estudiante2@demo.com', MD5('demo123'),'ESTUDIANTE'),
@@ -8,7 +8,7 @@ VALUES
 ('Estudiante Demo 4','estudiante4@demo.com', MD5('demo123'),'ESTUDIANTE'),
 ('Estudiante Demo 5','estudiante5@demo.com', MD5('demo123'),'ESTUDIANTE');
 
--- Crear registros en Estudiante para esos usuarios
+
 INSERT IGNORE INTO Estudiante (id_estudiante, codigo, grado)
 SELECT u.id_usuario, CONCAT('ALU-', LPAD(u.id_usuario,4,'0')), '7°'
 FROM Usuario u
@@ -19,7 +19,7 @@ WHERE u.correo IN (
   'estudiante5@demo.com'
 );
 
--- Asignarlos a un docente (toma el primero disponible)
+
 INSERT IGNORE INTO Asignacion (id_docente, id_estudiante, fecha, activo)
 SELECT d.id_docente, e.id_estudiante, CURDATE(), 1
 FROM (

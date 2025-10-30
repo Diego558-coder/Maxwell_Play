@@ -1,4 +1,4 @@
-import manPng from "@/assets/man.png"; // gracias al alias "@"
+import manPng from "@/assets/man.png"; 
 
 export default function PersonHair({
   hairRef, disabled,

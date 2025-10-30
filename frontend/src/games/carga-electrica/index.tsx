@@ -43,7 +43,7 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
   const alExitoRef = useRef(onExito);
   useEffect(() => { alExitoRef.current = onExito; }, [onExito]);
 
-  // ===== papelitos =====
+  
   function restablecerTransformacionPapelitos() {
     const mesa = mesaPapelitosRef.current;
     if (!mesa) return;

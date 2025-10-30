@@ -12,7 +12,7 @@ import {
 } from "./constants";
 import "./cicla.css";
 
-// Imágenes (ajusta alias @ si es distinto en tu Vite)
+
 import framePng from "@/assets/bike-frame.png";
 import wheelPng from "@/assets/wheel.png";
 import dynamoPng from "@/assets/dynamo.png";
@@ -24,7 +24,7 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
 
   const sceneRef = useRef<SVGSVGElement | null>(null);
 
-  // grupos y elementos clave
+  
   const grupoRuedaDelantera = useRef<SVGGElement | null>(null);
   const grupoRuedaTrasera = useRef<SVGGElement | null>(null);
   const rotorDelantero = useRef<SVGGElement | null>(null);
@@ -63,7 +63,7 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
   const [mensajeTemporal, setMensajeTemporal] = useState<string | null>(null);
   const [victoriaAlcanzada, setVictoriaAlcanzada] = useState(false);
 
-  // ===== utilidades SVG
+  
   const llevarAlFrente = (elemento?: Element | null) => elemento?.parentNode?.appendChild(elemento);
   const convertirCoordenadasASvg = (coordenadaX: number, coordenadaY: number) => {
     const s = sceneRef.current!;
@@ -83,7 +83,7 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
   const calcularDistancia = (a: { x: number; y: number }, b: { x: number; y: number }) =>
     Math.hypot(a.x - b.x, a.y - b.y);
 
-  // ===== Drag de grupos
+  
   const configurarArrastreGrupo = (
     grupo: SVGGElement,
     alIniciar?: () => void,
@@ -96,7 +96,7 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
     const alPresionar = (evento: PointerEvent) => {
       evento.preventDefault();
       arrastrando = true;
-      try { grupo.setPointerCapture(evento.pointerId); } catch { /* ignore */ }
+      try { grupo.setPointerCapture(evento.pointerId); } catch {  }
       llevarAlFrente(grupo);
       const transformacion = grupo.transform.baseVal.consolidate()?.matrix;
       base = {

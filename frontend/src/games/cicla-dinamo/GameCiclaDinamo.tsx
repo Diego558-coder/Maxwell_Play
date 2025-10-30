@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EscenaJuegoCiclaDinamo from "./Scene";
-// Si en tu proyecto usas lo mismo que el tren:
+
 import { useReglasDelJuego } from "@/hooks/useReglasDelJuego";
 import { registrarProgreso } from "@/lib/api";
 import { marcarCompletado } from "../../lib/progreso";
 
-const ID_JUEGO = 4; // id asignado en la tabla Minijuego
+const ID_JUEGO = 4; 
 
 type Umbrales = { oro_seg: number; plata_seg: number; bronce_seg: number };
 

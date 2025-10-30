@@ -1,4 +1,4 @@
-// Utilitarios de UI/DOM sin estado de React
+
 export function aplicarClasePolo(elemento: HTMLElement, polo: string) {
   elemento.textContent = polo;
   elemento.classList.toggle("n", polo === "N");

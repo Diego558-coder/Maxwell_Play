@@ -1,4 +1,4 @@
-// src/games/wifi-router/tracking.ts
+
 import { useEffect, useRef } from "react";
 import { registrarProgreso as registrarProgresoApi } from "@/lib/api";
 
@@ -14,7 +14,7 @@ export function useGameTracking(id_juego: number) {
         void registrarAvance(0);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [id_juego]);
 
   const registrarAvance = async (exito: 0 | 1) => {
@@ -25,14 +25,14 @@ export function useGameTracking(id_juego: number) {
         completado: exito === 1,
       });
     } catch {
-      // evitar romper el juego si el backend no responde
+      
     }
   };
 
   async function logEvent(tipo: string, payload?: unknown) {
     void tipo;
     void payload;
-    // No-op por ahora; se deja la firma para compatibilidad futura
+    
   }
 
   async function finalize(exito: 0 | 1) {

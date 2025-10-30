@@ -1,4 +1,4 @@
-// src/games/wifi-router/index.tsx
+
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "./wifi.css";
@@ -6,7 +6,7 @@ import { $, $$, C, clamp, within } from "./utils";
 import type { DragCtx, GameState, ModalState } from "./types";
 import { useGameTracking } from "./tracking";
 
-const GAME_ID = 5; // ← registra en DB con este id
+const GAME_ID = 5; 
 
 export default function GameWifiRouter() {
   const { logEvent, finalize } = useGameTracking(GAME_ID);
@@ -40,7 +40,7 @@ export default function GameWifiRouter() {
   const animRef = useRef<number | null>(null);
   const dragCtx = useRef<DragCtx>(null);
 
-  // =================== Helpers UI ===================
+  
   const openModal = (title: string, html: string) =>
     setModal({ open: true, title, html });
   const closeModal = () => setModal((m) => ({ ...m, open: false }));
