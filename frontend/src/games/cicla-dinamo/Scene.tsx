@@ -132,7 +132,6 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
     };
   };
 
-  // ===== Cables de dos puntas
   const configurarCableDeDosExtremos = (
     polaridad: "positivo" | "negativo",
     extremoA: SVGCircleElement,
@@ -281,7 +280,6 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
     ));
   };
 
-  // ===== pedalear
   useEffect(() => {
     if (victoriaAlcanzada) {
   rotorDelantero.current?.classList.remove("spin");
@@ -318,7 +316,7 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
     return () => { if (id) window.clearTimeout(id); };
   }, [cicla.estaPedaleando, cicla.dinamo.estaApoyada, victoriaAlcanzada]);
 
-  // medidor / bombillo / mensajes guía
+
   const paso1 = cicla.ruedas.estanMontadas;
   const paso2 = paso1 && cicla.dinamo.estaApoyada;
   const paso3 = paso2 && cicla.cables.estanCompletos;
@@ -344,14 +342,13 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
     setCicla((actual) => actual.detenerPedaleo());
   }, [listoParaPedalear, cicla.potencia, victoriaAlcanzada]);
 
-  // Disparar onWin cuando se alcanza el 100%
   useEffect(() => {
     if (!alGanar || !victoriaAlcanzada) return;
     const temporizadorVictoria = window.setTimeout(() => alGanar?.(), 600);
     return () => { if (temporizadorVictoria) clearTimeout(temporizadorVictoria); };
   }, [victoriaAlcanzada, alGanar]);
 
-  // listeners: ruedas, dínamo, cables
+
   useEffect(() => {
     const limpiarRuedaDelantera = grupoRuedaDelantera.current ? configurarArrastreGrupo(
       grupoRuedaDelantera.current,
@@ -411,10 +408,10 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
       ? configurarCableDeDosExtremos("negativo", extremoNegativoA.current, extremoNegativoB.current, cableNegativo.current) : undefined;
 
     return () => { limpiarRuedaDelantera?.(); limpiarRuedaTrasera?.(); limpiarDinamo?.(); limpiarCablePositivo?.(); limpiarCableNegativo?.(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
 
-  // Reinicio de piezas según posiciones iniciales
+ 
   const reiniciarEscenario = () => {
     setVictoriaAlcanzada(false);
     setCicla(() => CiclaDinamo.inicial());
@@ -466,7 +463,6 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
     window.setTimeout(() => setMensajeTemporal(null), duracionMs);
   };
 
-  // Bloquear scroll del body mientras el juego está activo
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -475,7 +471,6 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
 
   return (
     <div className="relative h-dvh w-screen overflow-hidden bg-gradient-to-br from-[#1e3c72] to-[#2a5298] select-none">
-      {/* CABECERA FIJA */}
       <div className="fixed top-0 left-0 w-full h-16 z-40 bg-white/5 backdrop-blur">
         <div className="relative w-full h-full grid place-items-center">
           <div className="text-white font-extrabold text-[clamp(1.2rem,2.4vw,2.2rem)] drop-shadow">Generación de energía</div>
@@ -486,7 +481,7 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
         </div>
       </div>
 
-      {/* HUD izquierda */}
+
       <div className="fixed left-3 top-20 w-[300px] bg-white/10 text-white rounded-2xl p-3 backdrop-blur-md z-30">
         <div className={`step ${cicla.ruedas.estanMontadas ? "done" : "active"}`}>
           <span className="dot" /> 1 Encaja <b>ruedas</b>
@@ -503,7 +498,7 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
         <div className="text-sm opacity-90 mt-2">{mensajeGuia}</div>
       </div>
 
-      {/* Medidor derecha */}
+
       <div className="fixed right-3 top-20 w-[260px] bg-white/10 text-white rounded-2xl p-3 backdrop-blur-md z-30">
         <div>⚡ Potencia</div>
         <div className="h-4 bg-white/30 rounded-md overflow-hidden">
@@ -512,19 +507,19 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
         <div ref={etiquetaPorcentaje} className="mt-1 font-bold text-right">0%</div>
       </div>
 
-      {/* Aviso flotante */}
+
       {mensajeTemporal && (
         <div className="fixed left-1/2 -translate-x-1/2 top-[90px] bg-white text-gray-800 px-3 py-2 rounded-lg shadow-2xl font-bold max-w-[80vw]">
           {mensajeTemporal}
         </div>
       )}
 
-      {/* ESCENA: ocupa todo entre cabecera (64px) y botonera (80px) */}
+
       <div className="absolute inset-x-0 top-16 bottom-20 grid place-items-center">
         <svg ref={sceneRef} viewBox="0 0 900 520" className="max-h-full w-[min(92vw,1000px)] h-auto">
           <rect x="0" y="470" width="900" height="50" fill="rgba(0,0,0,.15)" />
 
-          {/* Marco + ejes */}
+
           <g id="frame">
             <image href={framePng} x={MARCO.x} y={MARCO.y} width={MARCO.ancho} height={MARCO.alto} />
             <circle ref={ejeDelanteroObjetivo} cx={MARCO.ejeDelantero.x} cy={MARCO.ejeDelantero.y} r="10" fill="#27ae60" />
@@ -533,7 +528,7 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
             <circle ref={destelloEjeTrasero}  className="targetGlow" cx={MARCO.ejeTrasero.x}  cy={MARCO.ejeTrasero.y}  r="22" fill="none" stroke="#fff" strokeWidth={4} />
           </g>
 
-          {/* Rueda trasera */}
+
           <g ref={grupoRuedaTrasera} className="wheel" transform={`translate(${POSICIONES_INICIALES.ruedaTrasera.x},${POSICIONES_INICIALES.ruedaTrasera.y})`}>
             <g ref={rotorTrasero} className="rotor">
               <image href={wheelPng} x={-RADIO_LLANTA - 5} y={-RADIO_LLANTA - 5} width={(RADIO_LLANTA + 5) * 2} height={(RADIO_LLANTA + 5) * 2} />
@@ -542,14 +537,14 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
             </g>
           </g>
 
-          {/* Rueda delantera */}
+
           <g ref={grupoRuedaDelantera} className="wheel" transform={`translate(${POSICIONES_INICIALES.ruedaDelantera.x},${POSICIONES_INICIALES.ruedaDelantera.y})`}>
             <g ref={rotorDelantero} className="rotor">
               <image href={wheelPng} x={-RADIO_LLANTA - 5} y={-RADIO_LLANTA - 5} width={(RADIO_LLANTA + 5) * 2} height={(RADIO_LLANTA + 5) * 2} />
             </g>
           </g>
 
-          {/* Dínamo */}
+
           <g ref={grupoDinamo} className="dynamo" transform={`translate(${POSICIONES_INICIALES.dinamo.x},${POSICIONES_INICIALES.dinamo.y})`}>
             <image href={dynamoPng} x={-CONFIGURACION_DINAMO.ancho / 2} y={-CONFIGURACION_DINAMO.alto / 2} width={CONFIGURACION_DINAMO.ancho} height={CONFIGURACION_DINAMO.alto} />
             <circle cx={CONFIGURACION_DINAMO.rodillo.x} cy={CONFIGURACION_DINAMO.rodillo.y} r="10" fill="#7f8c8d" stroke="#95a5a6" strokeWidth={3}/>
@@ -561,7 +556,7 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
             <circle ref={destelloDinamoNegativo} className="targetGlow" cx={CONFIGURACION_DINAMO.negativo.x} cy={CONFIGURACION_DINAMO.negativo.y} r="17" fill="none" stroke="#fff" strokeWidth={4}/>
           </g>
 
-          {/* Bombillo */}
+
           <g transform="translate(700,180)">
             <defs>
               <radialGradient id="gBulb" cx="50%" cy="35%"><stop offset="0%" stopColor="#f1c40f" /><stop offset="100%" stopColor="#f39c12" /></radialGradient>
@@ -576,13 +571,12 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
             <circle ref={destelloBombilloNegativo} className="targetGlow" cx=" 12" cy="78" r="18" fill="none" stroke="#fff" strokeWidth={4}/>
           </g>
 
-          {/* Cables */}
           <g id="wires">
-            {/* ROJO + */}
+
             <line ref={cablePositivo}  x1="102" y1="296" x2="140" y2="296" stroke="#e74c3c" strokeWidth={5} strokeLinecap="round"/>
             <circle ref={extremoPositivoA} className="lead" cx="102" cy="296" r="10" fill="#e74c3c" stroke="#fff" strokeWidth={2}/>
             <circle ref={extremoPositivoB} className="lead" cx="140" cy="296" r="10" fill="#e74c3c" stroke="#fff" strokeWidth={2}/>
-            {/* NEGRO – */}
+
             <line ref={cableNegativo} x1="160" y1="328" x2="200" y2="308" stroke="#34495e" strokeWidth={5} strokeLinecap="round"/>
             <circle ref={extremoNegativoA} className="lead" cx="160" cy="328" r="10" fill="#34495e" stroke="#fff" strokeWidth={2}/>
             <circle ref={extremoNegativoB} className="lead" cx="200" cy="308" r="10" fill="#34495e" stroke="#fff" strokeWidth={2}/>
@@ -590,9 +584,9 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
         </svg>
       </div>
 
-      {/* Link menú movido a la cabecera */}
 
-      {/* Controles */}
+
+
       <div className="fixed left-1/2 -translate-x-1/2 bottom-3 flex gap-2 bg-white/10 backdrop-blur-md p-2 rounded-xl z-40">
         <button className={`px-4 py-2 rounded-lg font-bold text-white ${listoParaPedalear ? "bg-emerald-600" : "bg-emerald-600/40 cursor-not-allowed"}`} onClick={alternarPedaleo} disabled={!listoParaPedalear}>
           {cicla.estaPedaleando ? "⏹️ Parar" : "🚴 Pedalear"}

@@ -60,7 +60,6 @@ export default function JuegoCargaElectrica() {
       });
       marcarCompletado(ETIQUETA_URL);
       definirMensaje(`🏁 Juego finalizado — ${segundos}s → ${medalla || "BRONCE"}`);
-      // Redirigir al menú tras una breve pausa
       setTimeout(() => navegar("/menu"), 2200);
     } catch (e: unknown) {
       const err = e as { response?: { data?: { msg?: string } } };
@@ -73,7 +72,6 @@ export default function JuegoCargaElectrica() {
 
   return (
     <div className="min-h-[100dvh] text-white">
-      {/* Encabezado + cronómetro */}
       <div className="sticky top-0 z-10 bg-gradient-to-r from-indigo-500/70 to-purple-600/70 backdrop-blur p-3">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between">
           <h1 className="font-bold text-lg">Globos — Carga eléctrica</h1>
@@ -81,7 +79,6 @@ export default function JuegoCargaElectrica() {
         </div>
       </div>
 
-      {/* Escenario del juego a lo ancho */}
       <div className="max-w-[1400px] mx-auto p-6 bg-gradient-to-br from-indigo-500 to-purple-700 rounded-xl">
         <CargaElectrica onExito={alExitoDelJuego} />
         <div className="mt-3 text-sm opacity-90">

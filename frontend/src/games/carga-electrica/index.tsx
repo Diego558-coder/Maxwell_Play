@@ -101,7 +101,6 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
     }
   }, [globos]);
 
-  // ====== arrastre ======
   function alPresionarGlobo(e: React.PointerEvent, id: number) {
     if (gano) return;
     const objetivo = e.currentTarget as HTMLDivElement;
@@ -174,7 +173,6 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
     return () => window.removeEventListener("pointerup", alSoltarGlobal);
   }, [idArrastre, gano, finalizarArrastreEnPantalla]);
 
-  // ====== carga por fricción ======
   function intentarCargar(id: number, clientX: number, clientY: number) {
     if (gano) return;
     const cabello = cabelloRef.current;
@@ -194,7 +192,6 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
       cabello.classList.add("animate-wiggle");
       setTimeout(() => cabello.classList.remove("animate-wiggle"), 520);
 
-      // chispas
       for (let i = 0; i < 8; i++) {
         setTimeout(() => {
           const s = document.createElement("div");
@@ -216,7 +213,6 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
     papelitos.forEach((p) => { if (!p.dataset.rand) p.dataset.rand = Math.random().toFixed(3); });
   }, []);
 
-  // ===== victoria =====
   useEffect(() => {
     if (gano || !todosCargados) return;
 
@@ -232,7 +228,7 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
     });
   }, [todosCargados, gano]);
 
-  // ===== física =====
+
   useEffect(() => {
     let idAnimacion = 0, tiempo = 0;
     const paso = () => {
@@ -342,7 +338,6 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
     return () => cancelAnimationFrame(idAnimacion);
   }, [idArrastre, gano]);
 
-  // ===== layout inicial =====
   const restablecerJuego = useCallback(() => {
     const area = areaGlobosRef.current;
     const mesa = mesaCentralRef.current;
@@ -379,7 +374,6 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
 
   useEffect(() => { setTimeout(() => restablecerJuego(), 0); }, [restablecerJuego]);
 
-  // ===== UI =====
   return (
     <div
       ref={juegoRef}
@@ -392,10 +386,10 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
       </div>
 
       <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 p-6 relative">
-        {/* Columna 1: Persona */}
+
         <PersonHair hairRef={cabelloRef as React.RefObject<HTMLDivElement>} disabled={gano} />
 
-        {/* Columna 3: Papelitos */}
+
         <div className="flex flex-col items-center md:items-end md:col-start-3 md:justify-self-end md:place-self-end md:mr-6 gap-4">
           <div ref={mesaPapelitosRef} className="relative w-full max-w-[450px] h-[100px] bg-amber-800 rounded-lg shadow-lg">
             <div className="absolute left-5 -bottom-10 w-2 h-10 bg-amber-900" />
@@ -419,7 +413,7 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
           </div>
         </div>
 
-        {/* Área central con mesa + globos (ocupa las 3 columnas) */}
+
         <div ref={areaGlobosRef} className="relative md:col-span-3 rounded-xl overflow-visible" style={{ height: "36vh" }}>
           <div
             ref={mesaCentralRef}
@@ -447,7 +441,7 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
               style={{ left: globo.pos.x, top: globo.pos.y, width: ANCHO_GLOBO, height: ALTO_GLOBO, touchAction: "none", pointerEvents: gano ? "none" : "auto" }}
               title={globo.charged ? "Cargado" : "Arrástrame"}
             >
-              {/* Cuerda */}
+
               <div
                 style={{
                   position: "absolute",
@@ -475,7 +469,7 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
                 }}
               />
 
-              {/* Globo */}
+
               <div
                 className={`relative transition-transform ${idArrastre === globo.id ? "scale-105" : globo.charged ? "animate-balloonWobble" : ""}`}
                 style={{
@@ -502,13 +496,12 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
         </div>
       </div>
 
-      {/* Botonera flotante */}
+
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex gap-3 bg-white/10 p-4 rounded-xl backdrop-blur-md z-[100]">
         <button onClick={restablecerJuego} className="px-4 py-2 rounded-lg font-bold text-white bg-rose-500 hover:bg-rose-600 transition">🔄 Reiniciar</button>
         <button onClick={() => definirModal({ titulo: "📖 Manual", cuerpo: "1) Frota el globo con el cabello.\n2) Acércalo a los papelitos." })} className="px-4 py-2 rounded-lg font-bold text-white bg-amber-500 hover:bg-amber-600 transition">📖 Manual</button>
       </div>
 
-      {/* Modal */}
       {modal && (
         <div className="fixed inset-0 grid place-items-center p-4 z-[120]">
           <div className="absolute inset-0 bg-black/40" />
