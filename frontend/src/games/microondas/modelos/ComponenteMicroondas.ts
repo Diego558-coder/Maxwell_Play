@@ -41,14 +41,8 @@ export abstract class ComponenteMicroondas {
     return `${this.emoji} ${this.nombre}`;
   }
 
-  /**
-   * Retorna una nueva instancia con el estado de colocación actualizado.
-   */
   abstract conColocado(colocado: boolean): ComponenteMicroondas;
 
-  /**
-   * Permite a cada componente validar si ya se cumplen las condiciones para instalarse.
-   */
   puedeColocarse(componentes: ReadonlyArray<ComponenteMicroondas>): ValidacionColocacion {
     if (this.colocado) {
       return { valido: false, mensaje: "❌ Este componente ya fue instalado." };

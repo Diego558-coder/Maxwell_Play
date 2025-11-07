@@ -54,16 +54,6 @@ const cards: Card[] = [
     gameId: "ampere-maxwell",
     path: "/play/ampere-maxwell",
   },
-  {
-    id: 5,
-    title: "Red WiFi en Acción",
-    desc: "Simula cómo viajan las ondas EM en una red WiFi.",
-    icon: "📶",
-    formula: "v = λ·f",
-    grad: "from-purple-400 to-indigo-600",
-    gameId: "red-wifi",
-    path: "/play/red-wifi",
-  },
 ];
 
 export default function Menu() {

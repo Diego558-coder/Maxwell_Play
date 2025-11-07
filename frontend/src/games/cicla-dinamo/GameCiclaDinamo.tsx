@@ -6,7 +6,7 @@ import { useReglasDelJuego } from "@/hooks/useReglasDelJuego";
 import { registrarProgreso } from "@/lib/api";
 import { marcarCompletado } from "../../lib/progreso";
 
-const ID_JUEGO = 4; 
+const ID_JUEGO = 4;
 
 type Umbrales = { oro_seg: number; plata_seg: number; bronce_seg: number };
 
@@ -54,7 +54,6 @@ export default function GameCiclaDinamo() {
     }
   }
 
-  // La Scene ahora muestra la cabecera y el cronómetro integrado
   return (
     <div className="relative h-[100dvh] w-full">
       <EscenaJuegoCiclaDinamo alGanar={alCompletarJuego} segundosTranscurridos={seg} />

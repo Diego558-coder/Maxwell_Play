@@ -6,10 +6,14 @@
 .t-btn{background:#0ea5e9;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
 .t-btn.warn{background:#f97316}
 .t-btn.small{padding:8px 12px;font-size:.9rem}
-.t-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.06);padding:16px;display:flex;flex-direction:column;gap:12px}
-.t-table{display:grid}
+.t-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.06);padding:16px;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 180px);overflow:hidden}
+.t-table{display:grid;overflow-y:auto;max-height:calc(100vh - 240px);padding-right:8px}
+.t-table::-webkit-scrollbar{width:8px}
+.t-table::-webkit-scrollbar-track{background:#f1f5f9;border-radius:4px}
+.t-table::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+.t-table::-webkit-scrollbar-thumb:hover{background:#94a3b8}
 .t-thead,.t-row{display:grid;grid-template-columns:3fr 1fr 1fr 1fr 2fr 1fr;gap:12px;align-items:center}
-.t-thead{font-weight:800;color:#334155;border-bottom:1px solid #e5e7eb;padding:10px 8px}
+.t-thead{font-weight:800;color:#334155;border-bottom:1px solid #e5e7eb;padding:10px 8px;position:sticky;top:0;background:#fff;z-index:1}
 .t-row{padding:10px 8px;border-bottom:1px dashed #f1f5f9}
 .t-cell.code{font-family:ui-monospace, SFMono-Regular, Menlo, monospace}
 .t-cell.ok{color:#16a34a;font-weight:700}

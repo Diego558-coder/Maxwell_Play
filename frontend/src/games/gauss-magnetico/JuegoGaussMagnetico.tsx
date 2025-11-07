@@ -57,17 +57,14 @@ export default function JuegoGaussMagnetico() {
 
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden bg-gradient-to-br from-slate-800 to-blue-700">
-      {/* Timer fijo y visible */}
       <div className="fixed top-3 right-3 z-50">
         <div className="rounded-full bg-white text-slate-900 shadow-lg px-3 py-1.5 font-extrabold flex items-center gap-1">
           <span>⏱</span><span>{segundos}s</span>
         </div>
       </div>
 
-      {/* Escena del juego ocupando toda la pantalla */}
       <EscenaJuegoGaussMagnetico alGanar={alExitoDelJuego} />
 
-      {/* Mensajes/umbrales en la parte baja, sin empujar el layout */}
       <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-40 text-white/90 text-sm whitespace-nowrap">
         {umbralesMedalla && (
           <div className="mb-1 bg-white/15 rounded px-3 py-1">

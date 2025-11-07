@@ -57,7 +57,6 @@ export default function GameMicroondas() {
 
   return (
     <div className="h-dvh w-full overflow-hidden bg-gradient-to-br from-slate-800 to-blue-700">
-      {/* barra superior */}
       <div className="sticky top-0 z-10 bg-white/10 backdrop-blur p-3">
         <div className="max-w-[1600px] mx-auto flex items-center justify-between text-white">
           <div className="flex items-center gap-3">
@@ -74,7 +73,6 @@ export default function GameMicroondas() {
       </div>
 
       <div className="max-w-[1600px] mx-auto px-6 pb-8">
-        {/* La escena emite onWin() cuando termina el “cocinado” */}
         <GameAmpereMaxwellScene onWin={onExitoJuego} />
         <div className="mt-3 text-sm opacity-90 text-white">
           {um && <>Umbrales → Oro ≤ {um.oro_seg}s · Plata ≤ {um.plata_seg}s · Bronce ≤ {um.bronce_seg}s</>}

@@ -146,14 +146,12 @@ export default function EscenaJuegoGaussMagnetico({ alGanar }: { alGanar?: () =>
         <div className="rail" />
         <div className="sleepers" />
 
-        {/* Tren */}
         <div className={`train-area ${enMovimiento ? "moving" : ""}`} id="trainArea">
           <div className="loco" id="loco" data-izquierda="S" data-derecha="N">
             <span className="pole s">S</span><span>LOCO</span><span className="pole n">N</span>
             <div className="wheels"><div className="wheel" /><div className="wheel" /><div className="wheel" /></div>
           </div>
 
-          {/* Indicador entre loco y slot 0 */}
           <div className={`couple ${acoples.conLocomotora === null ? "" : acoples.conLocomotora ? "ok" : "bad"}`} id="cpl-loco">
             {acoples.conLocomotora === null ? "•" : acoples.conLocomotora ? "✔" : "✖"}
           </div>
@@ -195,7 +193,6 @@ export default function EscenaJuegoGaussMagnetico({ alGanar }: { alGanar?: () =>
           </div>
         </div>
 
-        {/* Controles */}
         <div className="controls">
           <button className="btn reset" id="btnReiniciar" onClick={reiniciarJuego}>🔄 Reiniciar</button>
           <button className="btn help" id="btnManual" onClick={mostrarInstrucciones}>📖 Manual</button>
@@ -204,10 +201,8 @@ export default function EscenaJuegoGaussMagnetico({ alGanar }: { alGanar?: () =>
           >🎬 Explicación</button>
         </div>
 
-        {/* Toast */}
         <div className="toast" id="avisoFlotante" style={{ display: mensajeTemporal ? "block" : "none" }} dangerouslySetInnerHTML={{ __html: mensajeTemporal }} />
 
-        {/* Modal de victoria */}
         <div className="modal" id="modalVictoria" style={{ display: mostrarVictoria ? "grid" : "none" }}>
           <div className="card">
             <h3>¡Felicitaciones! 🎉</h3>

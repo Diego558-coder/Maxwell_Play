@@ -96,7 +96,7 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
     const alPresionar = (evento: PointerEvent) => {
       evento.preventDefault();
       arrastrando = true;
-      try { grupo.setPointerCapture(evento.pointerId); } catch {  }
+      try { grupo.setPointerCapture(evento.pointerId); } catch (e) { void e; }
       llevarAlFrente(grupo);
       const transformacion = grupo.transform.baseVal.consolidate()?.matrix;
       base = {
@@ -177,7 +177,7 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
         evento.preventDefault();
         arrastrando = true;
         punteroActivo = evento.pointerId;
-        try { (evento.target as Element).setPointerCapture(evento.pointerId); } catch { /* ignorar */ }
+        try { (evento.target as Element).setPointerCapture(evento.pointerId); } catch (e) { void e; }
         llevarAlFrente(cable);
         llevarAlFrente(extremo);
   resplandorDinamo.classList.add("show");
@@ -201,7 +201,7 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
         if (!arrastrando) return;
         arrastrando = false;
         if (punteroActivo !== null && evento && (evento.pointerId === undefined || evento.pointerId === punteroActivo)) {
-          try { (evento.target as Element).releasePointerCapture(punteroActivo); } catch { /* ignorar */ }
+          try { (evento.target as Element).releasePointerCapture(punteroActivo); } catch (e) { void e; }
         }
         punteroActivo = null;
 
@@ -408,7 +408,7 @@ export default function EscenaJuegoCiclaDinamo({ alGanar, segundosTranscurridos 
       ? configurarCableDeDosExtremos("negativo", extremoNegativoA.current, extremoNegativoB.current, cableNegativo.current) : undefined;
 
     return () => { limpiarRuedaDelantera?.(); limpiarRuedaTrasera?.(); limpiarDinamo?.(); limpiarCablePositivo?.(); limpiarCableNegativo?.(); };
-    
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
  

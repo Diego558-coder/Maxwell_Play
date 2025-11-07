@@ -43,7 +43,6 @@ async function handleRegistro(req: Request, res: Response) {
   }
 
   try {
-    
     const [usuariosExistentes] = await pool.query(
       "SELECT id_usuario FROM Usuario WHERE correo = ? LIMIT 1",
       [correo]
@@ -52,7 +51,6 @@ async function handleRegistro(req: Request, res: Response) {
       return res.status(409).json({ msg: "El correo ya está registrado" });
     }
 
-    
     const [resultado] = await pool.query(
       "INSERT INTO Usuario (nombre, correo, contrasenia, rol, activo) VALUES (?, ?, MD5(?), 'ESTUDIANTE', 1)",
       [nombre, correo, contrasenia]
@@ -60,14 +58,12 @@ async function handleRegistro(req: Request, res: Response) {
 
     const id_usuario = (resultado as { insertId: number }).insertId;
 
-    
     const codigo = `ALU-${String(id_usuario).padStart(4, "0")}`;
     await pool.query(
       "INSERT INTO Estudiante (id_estudiante, codigo, grado) VALUES (?, ?, NULL)",
       [id_usuario, codigo]
     );
 
-    // Asignar automáticamente al primer docente activo disponible
     const [docentes] = await pool.query(
       "SELECT d.id_docente FROM Docente d JOIN Usuario u ON u.id_usuario = d.id_docente WHERE u.activo = 1 ORDER BY d.id_docente ASC LIMIT 1"
     );
@@ -79,14 +75,12 @@ async function handleRegistro(req: Request, res: Response) {
       );
     }
 
-    // Generar token JWT
     const token = jwt.sign(
       { id_usuario, nombre, correo, rol: "ESTUDIANTE" },
       process.env.JWT_SECRET as string,
       { expiresIn: "8h" }
     );
 
-    // Registrar la sesión
     await pool.query(
       "INSERT INTO Sesion (id_usuario, inicio, expira, token) VALUES (?, NOW(), DATE_ADD(NOW(), INTERVAL 8 HOUR), ?)",
       [id_usuario, token]
@@ -100,7 +94,7 @@ async function handleRegistro(req: Request, res: Response) {
 }
 
 authRoutes.post("/inicio-sesion", handleLogin);
-authRoutes.post("/login", handleLogin); // alias para compatibilidad
+authRoutes.post("/login", handleLogin);
 authRoutes.post("/registro", handleRegistro);
 
 export default authRoutes;

@@ -6,7 +6,6 @@ import JuegoCargaElectrica from "./games/carga-electrica/JuegoCargaElectrica";
 import JuegoGaussMagnetico from "@/games/gauss-magnetico/JuegoGaussMagnetico";
 import GameCiclaDinamo from "@/games/cicla-dinamo/GameCiclaDinamo";
 import GameMicroondas from "@/games/microondas/GameMicroondas";
-import GameWifiRouter from "@/games/wifi-router";
 import ListaProfesores from "./pages/teacher/listaProfesores";
 import DetalleEstudiante from "./pages/teacher/detalleEstudiante";
 import { getSesion } from "./state/session";
@@ -46,9 +45,6 @@ function Frame() {
             <Route path="/play/cicla-dinamo" element={<GameCiclaDinamo />} />
             <Route path="/microondas" element={<GameMicroondas />} />
             <Route path="/play/ampere-maxwell" element={<GameMicroondas />} />
-            {}
-            <Route path="/play/red-wifi" element={<GameWifiRouter />} />
-            <Route path="/wifi" element={<GameWifiRouter />} />
           </Route>
         </Routes>
       </div>

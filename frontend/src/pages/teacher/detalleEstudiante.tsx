@@ -26,8 +26,7 @@ const GAME_ORDER: Array<{ slug: string; nombre: string }> = [
   { slug: "cicla-dinamo", nombre: "Cicla dínamo" },
   { slug: "carga-electrica", nombre: "Globos Carga eléctrica" },
   { slug: "gauss-magnetico", nombre: "Tren Gauss magnético" },
-  { slug: "microondas", nombre: "Microondas" },
-  { slug: "wifi-router", nombre: "Red WiFi en acción" }
+  { slug: "microondas", nombre: "Microondas" }
 ];
 
 type ApiState = "idle" | "loading" | "ready" | "error";
