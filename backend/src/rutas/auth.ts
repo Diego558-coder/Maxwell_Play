@@ -1,17 +1,17 @@
 import { Router, type Request, type Response } from "express";
 import jwt from "jsonwebtoken";
-import { poolConexiones } from "../bd";
+import { pool } from "../db";
 
-const rutasAutenticacion = Router();
+const authRoutes = Router();
 
 
-async function manejarInicioSesion(req: Request, res: Response) {
+async function handleLogin(req: Request, res: Response) {
   const { correo, contrasenia } = req.body || {};
   if (!correo || !contrasenia) {
     return res.status(400).json({ msg: "correo y contrasenia son requeridos" });
   }
 
-  const [filas] = await poolConexiones.query(
+  const [filas] = await pool.query(
     "SELECT id_usuario, nombre, correo, rol FROM Usuario WHERE correo=? AND contrasenia=MD5(?) AND activo=1 LIMIT 1",
     [correo, contrasenia]
   );
@@ -27,7 +27,7 @@ async function manejarInicioSesion(req: Request, res: Response) {
     { expiresIn: "8h" }
   );
 
-  await poolConexiones.query(
+  await pool.query(
     "INSERT INTO Sesion (id_usuario, inicio, expira, token) VALUES (?, NOW(), DATE_ADD(NOW(), INTERVAL 8 HOUR), ?)",
     [usuario.id_usuario, token]
   );
@@ -36,7 +36,7 @@ async function manejarInicioSesion(req: Request, res: Response) {
 }
 
 
-async function manejarRegistro(req: Request, res: Response) {
+async function handleRegistro(req: Request, res: Response) {
   const { nombre, correo, contrasenia } = req.body || {};
   if (!nombre || !correo || !contrasenia) {
     return res.status(400).json({ msg: "nombre, correo y contrasenia son requeridos" });
@@ -44,7 +44,7 @@ async function manejarRegistro(req: Request, res: Response) {
 
   try {
     
-    const [usuariosExistentes] = await poolConexiones.query(
+    const [usuariosExistentes] = await pool.query(
       "SELECT id_usuario FROM Usuario WHERE correo = ? LIMIT 1",
       [correo]
     );
@@ -53,7 +53,7 @@ async function manejarRegistro(req: Request, res: Response) {
     }
 
     
-    const [resultado] = await poolConexiones.query(
+    const [resultado] = await pool.query(
       "INSERT INTO Usuario (nombre, correo, contrasenia, rol, activo) VALUES (?, ?, MD5(?), 'ESTUDIANTE', 1)",
       [nombre, correo, contrasenia]
     );
@@ -62,18 +62,18 @@ async function manejarRegistro(req: Request, res: Response) {
 
     
     const codigo = `ALU-${String(id_usuario).padStart(4, "0")}`;
-    await poolConexiones.query(
+    await pool.query(
       "INSERT INTO Estudiante (id_estudiante, codigo, grado) VALUES (?, ?, NULL)",
       [id_usuario, codigo]
     );
 
     // Asignar automáticamente al primer docente activo disponible
-    const [docentes] = await poolConexiones.query(
+    const [docentes] = await pool.query(
       "SELECT d.id_docente FROM Docente d JOIN Usuario u ON u.id_usuario = d.id_docente WHERE u.activo = 1 ORDER BY d.id_docente ASC LIMIT 1"
     );
     const docente = (docentes as Array<{ id_docente: number }>)[0];
     if (docente?.id_docente) {
-      await poolConexiones.query(
+      await pool.query(
         "INSERT INTO Asignacion (id_docente, id_estudiante, fecha, activo) VALUES (?, ?, CURDATE(), 1)",
         [docente.id_docente, id_usuario]
       );
@@ -87,7 +87,7 @@ async function manejarRegistro(req: Request, res: Response) {
     );
 
     // Registrar la sesión
-    await poolConexiones.query(
+    await pool.query(
       "INSERT INTO Sesion (id_usuario, inicio, expira, token) VALUES (?, NOW(), DATE_ADD(NOW(), INTERVAL 8 HOUR), ?)",
       [id_usuario, token]
     );
@@ -99,8 +99,8 @@ async function manejarRegistro(req: Request, res: Response) {
   }
 }
 
-rutasAutenticacion.post("/inicio-sesion", manejarInicioSesion);
-rutasAutenticacion.post("/login", manejarInicioSesion); // alias para compatibilidad
-rutasAutenticacion.post("/registro", manejarRegistro);
+authRoutes.post("/inicio-sesion", handleLogin);
+authRoutes.post("/login", handleLogin); // alias para compatibilidad
+authRoutes.post("/registro", handleRegistro);
 
-export default rutasAutenticacion;
+export default authRoutes;

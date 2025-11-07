@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAutenticacion } from "../hooks/useAutenticacion";
+import { useAuth } from "../hooks/useAuth";
 
-export default function InicioSesion() {
+export default function Login() {
   const [correo, setCorreo] = useState("estudiante@demo.com");
   const [contrasenia, setContrasenia] = useState("demo123");
-  const { iniciarSesion, cargando, error } = useAutenticacion();
+  const { iniciarSesion, cargando, error } = useAuth();
   const nav = useNavigate();
 
   const onSubmit = async (e: React.FormEvent) => {

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { consultar } from "../bd";
+import { consultar } from "../db";
 
 interface FilaEstudianteDocente {
   id_estudiante: number;

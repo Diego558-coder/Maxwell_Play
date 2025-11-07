@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import rutasAutenticacion from "./rutas/autenticacion";
+import authRoutes from "./rutas/auth";
 import rutasJuegos from "./rutas/juegos";
-import rutasDocentes from "./rutas/docentes";
+import teacherRoutes from "./rutas/teacher";
 
 dotenv.config();
 
@@ -13,8 +13,8 @@ aplicacion.use(express.json());
 
 aplicacion.get("/", (_req, res) => res.json({ ok: true, nombre: "MaxwellPlay API" }));
 
-aplicacion.use("/auth", rutasAutenticacion);
+aplicacion.use("/auth", authRoutes);
 aplicacion.use("/juegos", rutasJuegos);
-aplicacion.use("/api/docentes", rutasDocentes);
+aplicacion.use("/api/docentes", teacherRoutes);
 
 export default aplicacion;

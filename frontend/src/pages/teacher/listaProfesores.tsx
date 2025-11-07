@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "@/lib/api";
-import { cerrarSesion } from "@/state/sesion";
+import { cerrarSesion } from "@/state/session";
 import { isAxiosError } from "axios";
 import type { AxiosResponse } from "axios";
 import "./profesor.css";

@@ -1,4 +1,4 @@
-import type { DatosAutenticacion } from "../intermedios/requerirAutenticacion";
+import type { DatosAutenticacion } from "../intermedios/requireAuth";
 
 declare global {
   namespace Express {

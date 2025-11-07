@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
-import InicioSesion from "./pages/inicioSesion";
+import Login from "./pages/Login";
 import Registro from "./pages/Registro";
 import Menu from "./pages/Menu";
 import JuegoCargaElectrica from "./games/carga-electrica/JuegoCargaElectrica";
@@ -9,7 +9,7 @@ import GameMicroondas from "@/games/microondas/GameMicroondas";
 import GameWifiRouter from "@/games/wifi-router";
 import ListaProfesores from "./pages/teacher/listaProfesores";
 import DetalleEstudiante from "./pages/teacher/detalleEstudiante";
-import { obtenerSesion } from "./state/sesion";
+import { getSesion } from "./state/session";
 
 function App() {
   return (
@@ -30,7 +30,7 @@ function Frame() {
       <div className={fullBleed ? "flex-1" : "flex-1 max-w-5xl mx-auto p-4"}>
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/login" element={<InicioSesion />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
           <Route element={<RequireAuth />}>
             {}
@@ -57,7 +57,7 @@ function Frame() {
 }
 
 function RequireAuth() {
-  const sesion = obtenerSesion();
+  const sesion = getSesion();
   const location = useLocation();
   if (!sesion) {
     return <Navigate to="/login" state={{ from: location }} replace />;
@@ -66,7 +66,7 @@ function RequireAuth() {
 }
 
 function OnlyDocente() {
-  const sesion = obtenerSesion();
+  const sesion = getSesion();
   if (sesion?.rol !== "DOCENTE") {
     
     return <Navigate to="/menu" replace />;
@@ -75,7 +75,7 @@ function OnlyDocente() {
 }
 
 function OnlyEstudiante() {
-  const sesion = obtenerSesion();
+  const sesion = getSesion();
   if (sesion?.rol === "DOCENTE") {
     
     return <Navigate to="/docente" replace />;

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { obtenerSesion, cerrarSesion } from "@/state/sesion";
+import { getSesion, cerrarSesion } from "@/state/session";
 import { estaCompletado, reiniciarTodo } from "../lib/progreso";
 
 type Card = {
@@ -68,7 +68,7 @@ const cards: Card[] = [
 
 export default function Menu() {
   const nav = useNavigate();
-  const sesion = obtenerSesion();
+  const sesion = getSesion();
   return (
     <div className="min-h-[100dvh] relative overflow-hidden bg-gradient-to-br from-indigo-400 to-purple-700 text-white">
       <header className="relative z-10 text-center py-8 md:py-10">

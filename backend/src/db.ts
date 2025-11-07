@@ -9,7 +9,7 @@ const usuarioBD = process.env.DB_USER || "root";
 const contraseniaBD = process.env.DB_PASSWORD || "";
 const nombreBD = process.env.DB_NAME || "database";
 
-export const poolConexiones = mysql.createPool({
+export const pool = mysql.createPool({
   host: hostBD,
   port: puertoBD,
   user: usuarioBD,
@@ -21,6 +21,6 @@ export const poolConexiones = mysql.createPool({
 });
 
 export async function consultar<T = unknown>(sql: string, params?: any[]): Promise<T[]> {
-  const [filas] = await poolConexiones.query(sql, params);
+  const [filas] = await pool.query(sql, params);
   return filas as T[];
 }

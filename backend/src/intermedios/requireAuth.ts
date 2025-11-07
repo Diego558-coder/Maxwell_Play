@@ -8,7 +8,7 @@ export interface DatosAutenticacion {
   correo: string;
 }
 
-export function requerirAutenticacion(req: Request, res: Response, next: NextFunction) {
+export function requireAuth(req: Request, res: Response, next: NextFunction) {
   try {
     const header = req.headers.authorization || "";
     const token = header.startsWith("Bearer ") ? header.slice(7) : null;

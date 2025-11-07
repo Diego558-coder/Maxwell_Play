@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { inicioSesion, type Usuario } from "../lib/api";
 
-export function useAutenticacion() {
+export function useAuth() {
   const [usuario, setUsuario] = useState<Usuario | null>(() => {
     const usuarioGuardado = localStorage.getItem("usuario");
     return usuarioGuardado ? JSON.parse(usuarioGuardado) : null;

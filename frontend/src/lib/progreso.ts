@@ -1,10 +1,10 @@
-import { obtenerSesion } from "../state/sesion";
+import { getSesion } from "../state/session";
 import { reiniciarProgreso } from "./api";
 
 const PREFIJO = "progreso:";
 
 function clavePara(idJuego: string) {
-  const usuario = obtenerSesion();
+  const usuario = getSesion();
   const segmentoUsuario = usuario ? String(usuario.id_usuario) : "anon";
   return `${PREFIJO}${segmentoUsuario}:${idJuego}`;
 }
@@ -28,7 +28,7 @@ export function marcarCompletado(idJuego: string) {
 }
 
 export async function reiniciarTodo() {
-  const usuario = obtenerSesion();
+  const usuario = getSesion();
   const segmentoUsuario = usuario ? String(usuario.id_usuario) : "anon";
   const prefijoObjetivo = `${PREFIJO}${segmentoUsuario}:`;
 
