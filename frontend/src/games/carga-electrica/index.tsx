@@ -137,7 +137,7 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
         if (globo.id !== id) return globo;
         const globoSinVelocidad = globo.withVelocity(Vector2.zero());
         if (rectMesa) {
-          const tocaParteSuperior = Math.abs(globo.pos.y + ALTO_GLOBO - rectMesa.y) <= 8;
+          const tocaParteSuperior = Math.abs(globo.pos.y + ALTO_GLOBO - rectMesa.y) <= 6;
           const solapaEjeX = globo.pos.x + ANCHO_GLOBO > rectMesa.x && globo.pos.x < rectMesa.x + rectMesa.w;
           if (tocaParteSuperior && solapaEjeX) {
             return globoSinVelocidad
@@ -298,7 +298,7 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
           if (velocidadY > 0) {
             const golpeaX = x + ANCHO_GLOBO > minimoX && x < maximoX + ANCHO_GLOBO;
             const bordeInferior = y + ALTO_GLOBO;
-            if (golpeaX && bordeInferior >= minimoY && bordeInferior <= minimoY + 10) {
+            if (golpeaX && bordeInferior >= minimoY && bordeInferior <= minimoY + 8) {
               y = minimoY - ALTO_GLOBO;
               velocidadY = 0;
               velocidadX *= 0.82;
@@ -378,27 +378,27 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
     <div
       ref={juegoRef}
       className="w-full relative flex flex-col bg-gradient-to-br from-indigo-400 to-purple-700 overflow-hidden rounded-xl"
-      style={{ minHeight: "80vh" }}
+      style={{ minHeight: "60vh" }}
     >
-      <Link to="/menu" className="absolute top-4 left-4 z-50 px-4 py-3 rounded-xl bg-white/20 text-white font-extrabold text-xl md:text-2xl hover:bg-white/30">← Menú</Link>
-      <div className="absolute top-4 right-4 z-50 px-4 py-3 rounded-xl bg-white/20 text-white font-bold text-base md:text-lg backdrop-blur">
+      <Link to="/menu" className="absolute top-2 left-2 z-50 px-3 py-2 rounded-xl bg-white/20 text-white font-extrabold text-base hover:bg-white/30">← Menú</Link>
+      <div className="absolute top-2 right-2 z-50 px-3 py-2 rounded-xl bg-white/20 text-white font-bold text-sm backdrop-blur">
         🔋 Globos cargados: {globosCargados}/{totalGlobos}
       </div>
 
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 p-6 relative">
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3 p-3 relative">
 
         <PersonHair hairRef={cabelloRef as React.RefObject<HTMLDivElement>} disabled={gano} />
 
 
-        <div className="flex flex-col items-center md:items-end md:col-start-3 md:justify-self-end md:place-self-end md:mr-6 gap-4">
-          <div ref={mesaPapelitosRef} className="relative w-full max-w-[450px] h-[100px] bg-amber-800 rounded-lg shadow-lg">
-            <div className="absolute left-5 -bottom-10 w-2 h-10 bg-amber-900" />
-            <div className="absolute right-5 -bottom-10 w-2 h-10 bg-amber-900" />
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-[100px] flex flex-wrap gap-1 justify-center">
+        <div className="flex flex-col items-center md:items-end md:col-start-3 md:justify-self-end md:place-self-end md:mr-4 gap-2">
+          <div ref={mesaPapelitosRef} className="relative w-full max-w-[320px] h-[80px] bg-amber-800 rounded-lg shadow-lg">
+            <div className="absolute left-4 -bottom-8 w-2 h-8 bg-amber-900" />
+            <div className="absolute right-4 -bottom-8 w-2 h-8 bg-amber-900" />
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-[80px] flex flex-wrap gap-1 justify-center">
               {Array.from({ length: 30 }).map((_, i) => (
                 <div
                   key={i}
-                  className="paper-piece w-[15px] h-[15px] bg-white rounded-sm"
+                  className="paper-piece w-[12px] h-[12px] bg-white rounded-sm"
                   style={{
                     transition: "transform 0.35s ease",
                     willChange: "transform",
@@ -408,27 +408,27 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
               ))}
             </div>
           </div>
-          <div className="w-full max-w-[450px] text-center md:text-right text-white font-extrabold text-2xl md:text-3xl drop-shadow-md">
+          <div className="w-full max-w-[320px] text-center md:text-right text-white font-extrabold text-lg drop-shadow-md">
             Papelitos
           </div>
         </div>
 
 
-        <div ref={areaGlobosRef} className="relative md:col-span-3 rounded-xl overflow-visible" style={{ height: "36vh" }}>
+        <div ref={areaGlobosRef} className="relative md:col-span-3 rounded-xl overflow-visible" style={{ height: "28vh" }}>
           <div
             ref={mesaCentralRef}
             className="absolute left-1/2 -translate-x-1/2"
             style={{
-              bottom: 110, width: "calc(100% - 96px)", maxWidth: "1500px", height: "110px",
-              borderRadius: "1rem", backgroundColor: "#92400e",
-              boxShadow: "0 30px 80px rgba(0,0,0,.25), inset 0 -8px 14px rgba(0,0,0,0.12)",
+              bottom: 80, width: "calc(100% - 64px)", maxWidth: "1200px", height: "90px",
+              borderRadius: "0.8rem", backgroundColor: "#92400e",
+              boxShadow: "0 20px 60px rgba(0,0,0,.25), inset 0 -6px 12px rgba(0,0,0,0.12)",
               border: "1px solid #78350f",
             }}
             title="Mesa central"
           >
-            <div className="absolute left-10 -bottom-8 w-3 h-10 bg-amber-900 rounded-md" />
-            <div className="absolute right-10 -bottom-8 w-3 h-10 bg-amber-900 rounded-md" />
-            <div className="absolute inset-x-0 top-0 h-3 rounded-t-2xl bg-amber-700/40 pointer-events-none" />
+            <div className="absolute left-8 -bottom-6 w-2.5 h-8 bg-amber-900 rounded-md" />
+            <div className="absolute right-8 -bottom-6 w-2.5 h-8 bg-amber-900 rounded-md" />
+            <div className="absolute inset-x-0 top-0 h-2 rounded-t-2xl bg-amber-700/40 pointer-events-none" />
           </div>
 
           {globos.map((globo) => (
@@ -497,19 +497,19 @@ export default function CargaElectrica({ onExito }: { onExito?: () => void }) {
       </div>
 
 
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex gap-3 bg-white/10 p-4 rounded-xl backdrop-blur-md z-[100]">
-        <button onClick={restablecerJuego} className="px-4 py-2 rounded-lg font-bold text-white bg-rose-500 hover:bg-rose-600 transition">🔄 Reiniciar</button>
-        <button onClick={() => definirModal({ titulo: "📖 Manual", cuerpo: "1) Frota el globo con el cabello.\n2) Acércalo a los papelitos." })} className="px-4 py-2 rounded-lg font-bold text-white bg-amber-500 hover:bg-amber-600 transition">📖 Manual</button>
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-white/10 p-3 rounded-xl backdrop-blur-md z-[100]">
+        <button onClick={restablecerJuego} className="px-3 py-1.5 text-sm rounded-lg font-bold text-white bg-rose-500 hover:bg-rose-600 transition">🔄 Reiniciar</button>
+        <button onClick={() => definirModal({ titulo: "📖 Manual", cuerpo: "1) Frota el globo con el cabello.\n2) Acércalo a los papelitos." })} className="px-3 py-1.5 text-sm rounded-lg font-bold text-white bg-amber-500 hover:bg-amber-600 transition">📖 Manual</button>
       </div>
 
       {modal && (
         <div className="fixed inset-0 grid place-items-center p-4 z-[120]">
           <div className="absolute inset-0 bg-black/40" />
-          <div className="relative bg-white text-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-lg">
-            <h3 className="text-xl font-extrabold mb-2">{modal.titulo}</h3>
-            <p className="mb-4 whitespace-pre-line">{modal.cuerpo}</p>
+          <div className="relative bg-white text-gray-800 rounded-xl shadow-2xl p-5 w-full max-w-md">
+            <h3 className="text-lg font-extrabold mb-2">{modal.titulo}</h3>
+            <p className="mb-3 text-sm whitespace-pre-line">{modal.cuerpo}</p>
             <div className="text-right">
-              <button onClick={() => definirModal(null)} className="px-4 py-2 rounded-lg font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition">Continuar</button>
+              <button onClick={() => definirModal(null)} className="px-4 py-2 text-sm rounded-lg font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition">Continuar</button>
             </div>
           </div>
         </div>

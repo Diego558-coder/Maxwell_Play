@@ -61,14 +61,14 @@ export default function Menu() {
   const sesion = getSesion();
   return (
     <div className="min-h-[100dvh] relative overflow-hidden bg-gradient-to-br from-indigo-400 to-purple-700 text-white">
-      <header className="relative z-10 text-center py-8 md:py-10">
-        <h1 className="text-3xl md:text-5xl font-extrabold drop-shadow-lg">
+      <header className="relative z-10 text-center py-4 md:py-6">
+        <h1 className="text-2xl md:text-3xl font-extrabold drop-shadow-lg">
           Menú de Juegos Interactivos – Ecuaciones de Maxwell
         </h1>
-        <p className="mt-3 md:mt-4 text-base md:text-lg text-white/90">
+        <p className="mt-2 text-sm md:text-base text-white/90">
           Explora los juegos y descubre cómo funcionan las leyes del electromagnetismo.
         </p>
-        <div className="mt-3 md:mt-4 flex gap-2 justify-center">
+        <div className="mt-2 flex gap-2 justify-center">
           {!sesion ? (
             <button onClick={() => nav('/inicio-sesion')} className="px-3 py-1 rounded bg-white/20 hover:bg-white/30 font-bold">
               Iniciar sesión
@@ -95,51 +95,51 @@ export default function Menu() {
               alert("No se pudo reiniciar el progreso. Intenta nuevamente.");
             }
           }}
-          className="mt-3 md:mt-4 px-3 py-1 rounded bg-white/20 hover:bg-white/30 font-bold"
+          className="mt-2 px-3 py-1 rounded bg-white/20 hover:bg-white/30 font-bold text-sm"
           title="Reinicia el progreso de todos los juegos"
         >
           🔁 Reiniciar juegos
         </button>
       </header>
 
-      <main className="relative max-w-6xl mx-auto px-4 pb-10">
-        <div className="grid gap-5 md:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <main className="relative max-w-5xl mx-auto px-4 pb-8">
+        <div className="grid gap-4 md:gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {cards.map((c) => {
             const completed = estaCompletado(c.gameId);
             return (
               <article
                 key={c.id}
-                className={`group relative rounded-2xl h-[clamp(11rem,22vh,15rem)] shadow-xl overflow-hidden transition
+                className={`group relative rounded-2xl h-[clamp(9rem,18vh,12rem)] shadow-xl overflow-hidden transition
                             ${completed ? "opacity-60" : "hover:-translate-y-1 hover:shadow-2xl"}
                             bg-gradient-to-br ${c.grad}`}
               >
                 {completed && (
-                  <div className="absolute -rotate-12 top-6 left-6 z-10 px-3 py-1 bg-emerald-600 text-white font-extrabold rounded">
+                  <div className="absolute -rotate-12 top-4 left-4 z-10 px-2 py-1 bg-emerald-600 text-white text-xs font-extrabold rounded">
                     ✅ Pasado
                   </div>
                 )}
 
-                <div className="absolute top-4 left-4 w-10 h-10 rounded-full bg-white/25 backdrop-blur flex items-center justify-center font-extrabold">
+                <div className="absolute top-3 left-3 w-8 h-8 rounded-full bg-white/25 backdrop-blur flex items-center justify-center font-extrabold text-sm">
                   {c.id}
                 </div>
 
-                <div className="absolute inset-0 grid place-items-center text-6xl opacity-30 group-hover:opacity-10 transition">
+                <div className="absolute inset-0 grid place-items-center text-4xl opacity-30 group-hover:opacity-10 transition">
                   {c.icon}
                 </div>
 
-                <div className="absolute top-3 right-4 text-sm opacity-70 font-mono">
+                <div className="absolute top-2 right-3 text-xs opacity-70 font-mono">
                   {c.formula}
                 </div>
 
-                <div className="absolute inset-0 p-6 flex flex-col justify-center text-center opacity-0 translate-y-4
+                <div className="absolute inset-0 p-4 flex flex-col justify-center text-center opacity-0 translate-y-4
                                 group-hover:opacity-100 group-hover:translate-y-0 transition">
-                  <h3 className="text-lg font-extrabold drop-shadow">{c.title}</h3>
-                  <p className="mt-2 text-white/95">{c.desc}</p>
+                  <h3 className="text-base font-extrabold drop-shadow">{c.title}</h3>
+                  <p className="mt-1 text-sm text-white/95">{c.desc}</p>
 
-                  <div className="mt-4">
+                  <div className="mt-3">
                     {completed ? (
                       <span
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 cursor-not-allowed select-none font-bold"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full bg-white/20 cursor-not-allowed select-none font-bold"
                         aria-disabled="true"
                         title="Ya completado"
                       >
@@ -148,7 +148,7 @@ export default function Menu() {
                     ) : (
                       <Link
                         to={c.path}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/25 backdrop-blur hover:bg-white/35 font-bold"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full bg-white/25 backdrop-blur hover:bg-white/35 font-bold"
                         aria-label={`Jugar ${c.title}`}
                       >
                         ▶ Play

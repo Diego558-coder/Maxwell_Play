@@ -73,18 +73,18 @@ export default function JuegoCargaElectrica() {
 
   return (
     <div className="min-h-[100dvh] text-white">
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-indigo-500/70 to-purple-600/70 backdrop-blur p-3">
+      <div className="sticky top-0 z-10 bg-gradient-to-r from-indigo-500/70 to-purple-600/70 backdrop-blur p-2">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between">
-          <h1 className="font-bold text-lg">Globos — Carga eléctrica</h1>
-          <div className="rounded-lg bg-white/20 px-3 py-1 font-bold">⏱ {segundos}s</div>
+          <h1 className="font-bold text-base">Globos — Carga eléctrica</h1>
+          <div className="rounded-lg bg-white/20 px-2 py-1 font-bold text-sm">⏱ {segundos}s</div>
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto p-6 bg-gradient-to-br from-indigo-500 to-purple-700 rounded-xl">
+      <div className="max-w-[1400px] mx-auto p-3 bg-gradient-to-br from-indigo-500 to-purple-700 rounded-xl">
         <CargaElectrica onExito={alExitoDelJuego} />
-        <div className="mt-3 text-sm opacity-90">
+        <div className="mt-2 text-xs opacity-90">
           {umbrales && <>Umbrales → Oro ≤ {umbrales.oro_seg}s · Plata ≤ {umbrales.plata_seg}s · Bronce ≤ {umbrales.bronce_seg}s</>}
-          {mensaje && <div className="mt-2 bg-white/20 rounded px-3 py-2">{mensaje}</div>}
+          {mensaje && <div className="mt-2 bg-white/20 rounded px-2 py-1 text-sm">{mensaje}</div>}
         </div>
       </div>
     </div>
